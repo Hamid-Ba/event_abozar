@@ -102,19 +102,6 @@ services:
     restart: unless-stopped
     networks:
       - event_abozar_back
-
-  caddy:
-    image: caddy:2-alpine
-    container_name: caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-    depends_on:
-      - web
-    networks:
-      - event_abozar_back
-
+      
 networks:
   event_abozar_back:
