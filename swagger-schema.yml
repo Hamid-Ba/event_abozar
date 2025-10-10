@@ -1,0 +1,1560 @@
+openapi: 3.0.3
+info:
+  title: API یازدهمین جشنواره رسانه‌ای ابوذر
+  version: 1.0.0
+  description: "\n    ## مستندات API جشنواره ابوذر\n    \n    این API برای مدیریت\
+    \ یازدهمین جشنواره رسانه‌ای ابوذر طراحی شده است.\n    \n    ### امکانات اصلی:\n\
+    \    - \U0001F3AD **ثبت‌نام جشنواره**: ثبت‌نام کاربران در جشنواره\n    - \U0001F4F0\
+    \ **مدیریت محتوا**: اخبار، آموزش‌ها و رویدادها  \n    - \U0001F3DB️ **اطلاعات\
+    \ جغرافیایی**: استان‌ها و شهرهای ایران\n    - \U0001F464 **مدیریت کاربران**: احراز\
+    \ هویت و پروفایل\n    - \U0001F4CA **گزارش‌گیری**: آمار و اطلاعات ثبت‌نام‌ها\n\
+    \    \n    ### نحوه استفاده:\n    1. برای دسترسی به endpoint های محافظت شده، ابتدا\
+    \ احراز هویت کنید\n    2. از فیلترها و جستجو برای یافتن اطلاعات مورد نظر استفاده\
+    \ کنید\n    3. داده‌ها به صورت صفحه‌بندی شده ارائه می‌شوند\n    \n    \U0001F517\
+    \ **پشتیبانی**: تیم فنی جشنواره ابوذر\n    "
+  contact:
+    name: تیم فنی جشنواره ابوذر
+    email: support@abozar-festival.ir
+  license:
+    name: جشنواره رسانه‌ای ابوذر
+paths:
+  /account/login_or_register/:
+    post:
+      operationId: account_login_or_register_create
+      tags:
+      - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InputRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InputRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Input'
+          description: ''
+  /account/me/:
+    get:
+      operationId: account_me_retrieve
+      description: Retrieve Or Update APIView for User
+      tags:
+      - account
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: account_me_update
+      description: Retrieve Or Update APIView for User
+      tags:
+      - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: account_me_partial_update
+      description: Retrieve Or Update APIView for User
+      tags:
+      - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /account/refresh/:
+    post:
+      operationId: account_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /account/token/:
+    post:
+      operationId: account_token_create
+      description: Auth Token View For Create JWT Token
+      tags:
+      - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthTokenRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: ''
+  /account/verify/:
+    post:
+      operationId: account_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: No response body
+  /api/create-superuser/:
+    post:
+      operationId: api_create_superuser_create
+      description: |-
+        Create a superuser account for development purposes.
+
+        This endpoint is intended for local development only.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSuperUserRequest'
+            examples:
+              CreateSuperuserExample:
+                value:
+                  phone: 09123456789
+                  email: admin@example.com
+                  password: secure-password-123
+                  fullName: Admin User
+                summary: Create superuser example
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateSuperUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateSuperUserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user_id:
+                    type: integer
+                  phone:
+                    type: string
+                  email:
+                    type: string
+                  fullName:
+                    type: string
+              examples:
+                CreateSuperuserExample:
+                  value:
+                    phone: 09123456789
+                    email: admin@example.com
+                    password: secure-password-123
+                    fullName: Admin User
+                  summary: Create superuser example
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: object
+          description: ''
+  /content/education/:
+    get:
+      operationId: content_education_list
+      description: دریافت لیست صفحه‌بندی شده آموزش‌ها با قابلیت جستجو و فیلتر
+      summary: دریافت لیست آموزش‌ها
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: publish_date
+        schema:
+          type: string
+          format: date
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: tags__name
+        schema:
+          type: string
+      tags:
+      - آموزش
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEducationListList'
+          description: ''
+  /content/education/{id}/:
+    get:
+      operationId: content_education_retrieve
+      description: دریافت جزئیات کامل یک آموزش
+      summary: دریافت جزئیات آموزش
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - آموزش
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Education'
+          description: ''
+  /content/events/:
+    get:
+      operationId: content_events_list
+      description: دریافت لیست صفحه‌بندی شده رویدادها با قابلیت جستجو و فیلتر
+      summary: دریافت لیست رویدادها
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: publish_date
+        schema:
+          type: string
+          format: date
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: tags__name
+        schema:
+          type: string
+      tags:
+      - رویداد
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventListList'
+          description: ''
+  /content/events/{id}/:
+    get:
+      operationId: content_events_retrieve
+      description: دریافت جزئیات کامل یک رویداد
+      summary: دریافت جزئیات رویداد
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - رویداد
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+          description: ''
+  /content/news/:
+    get:
+      operationId: content_news_list
+      description: دریافت لیست صفحه‌بندی شده اخبار با قابلیت جستجو و فیلتر
+      summary: دریافت لیست اخبار
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: publish_date
+        schema:
+          type: string
+          format: date
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: tags__name
+        schema:
+          type: string
+      tags:
+      - اخبار
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNewsListList'
+          description: ''
+  /content/news/{id}/:
+    get:
+      operationId: content_news_retrieve
+      description: دریافت جزئیات کامل یک خبر
+      summary: دریافت جزئیات خبر
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - اخبار
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+          description: ''
+  /festival/cities/:
+    get:
+      operationId: festival_cities_list
+      description: Get list of cities for a specific province.
+      summary: List Cities by Province
+      tags:
+      - Province & City
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+          description: ''
+  /festival/provinces/:
+    get:
+      operationId: festival_provinces_list
+      description: Get list of all provinces for dropdown selection in registration
+        form.
+      summary: List Provinces
+      tags:
+      - Province & City
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Province'
+          description: ''
+  /festival/registration/:
+    post:
+      operationId: festival_registration_create
+      description: Create Festival Registration - No Authentication Required
+      tags:
+      - festival
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FestivalRegistrationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FestivalRegistrationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FestivalRegistrationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FestivalRegistrationCreate'
+          description: ''
+  /festival/registrations/:
+    get:
+      operationId: festival_registrations_list
+      description: دریافت فهرست کامل ثبت‌نام‌های جشنواره با قابلیت فیلتر و جستجو بر
+        اساس نام، رسانه، استان، شهر و سایر فیلدها.
+      summary: فهرست ثبت‌نام‌ها
+      parameters:
+      - in: query
+        name: city
+        schema:
+          type: integer
+      - in: query
+        name: festival_format
+        schema:
+          type: string
+          title: قالب جشنواره
+          enum:
+          - documentary
+          - editorial
+          - headline
+          - infographic
+          - interview
+          - motion_graphic
+          - news_report
+          - photo
+          - podcast
+          - video_clip
+        description: |-
+          * `news_report` - گزارش خبری
+          * `interview` - مصاحبه
+          * `editorial` - یادداشت و سرمقاله
+          * `headline` - تیتر
+          * `infographic` - اینفوگرافی
+          * `motion_graphic` - موشن گرافی
+          * `photo` - عکس
+          * `video_clip` - کلیپ و گزارش ویدیویی
+          * `documentary` - مستند
+          * `podcast` - پادکست
+      - in: query
+        name: festival_topic
+        schema:
+          type: string
+          title: محور جشنواره
+          enum:
+          - basij_action
+          - family_society
+          - hope_happiness
+          - islamic_lifestyle
+          - jihad_explanation
+          - media_industry
+          - revolution_achievements
+          - sacrifice_martyrdom
+          - social_harms
+          - water_electricity_saving
+          - year_slogan
+        description: |-
+          * `year_slogan` - شعار سال
+          * `jihad_explanation` - جهاد تبیین
+          * `media_industry` - پیوند رسانه و صنعت
+          * `social_harms` - مقابله با آسیب‌های اجتماعی
+          * `revolution_achievements` - دستاوردهای انقلاب اسلامی
+          * `basij_action` - بسیج و حوزه‌های اقدام
+          * `hope_happiness` - امید و نشاط آفرینی
+          * `family_society` - خانواده ،جامعه و فرزندآوری
+          * `islamic_lifestyle` - سبک زندگی ایرانی اسلامی
+          * `sacrifice_martyrdom` - ایثار و شهادت
+          * `water_electricity_saving` - صرفه‌جویی در مصرف آب و برق
+      - in: query
+        name: gender
+        schema:
+          type: string
+          title: جنسیت
+          enum:
+          - female
+          - male
+        description: |-
+          * `male` - مرد
+          * `female` - زن
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: province
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: special_section
+        schema:
+          type: string
+          nullable: true
+          title: بخش ویژه
+          enum:
+          - field_narrative_12days
+          - progress_narrative
+        description: |-
+          * `progress_narrative` - روایت پیشرفت
+          * `field_narrative_12days` - روایت میدان در جنگ ۱۲ روزه
+      tags:
+      - Festival Registration
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FestivalRegistrationList'
+          description: ''
+  /festival/registrations/{id}/:
+    get:
+      operationId: festival_registrations_retrieve
+      description: Get detailed information about a specific festival registration.
+      summary: Get Festival Registration Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Festival Registration
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FestivalRegistration'
+          description: ''
+  /festival/registrations/search/:
+    get:
+      operationId: festival_registrations_search_list
+      description: Search festival registrations by phone number or national ID.
+      summary: Search Festival Registrations
+      tags:
+      - Festival Registration
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FestivalRegistrationList'
+          description: ''
+components:
+  schemas:
+    AuthToken:
+      type: object
+      properties:
+        phone:
+          type: string
+          maxLength: 11
+        password:
+          type: string
+      required:
+      - password
+      - phone
+    AuthTokenRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 11
+        password:
+          type: string
+          minLength: 1
+      required:
+      - password
+      - phone
+    BlankEnum:
+      enum:
+      - ''
+    City:
+      type: object
+      description: City Serializer
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: نام
+          maxLength: 85
+      required:
+      - id
+      - name
+    CreateSuperUserRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          description: Phone number (11 digits)
+          maxLength: 11
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        fullName:
+          type: string
+          description: Full name of the user
+          maxLength: 255
+      required:
+      - password
+      - phone
+    Education:
+      type: object
+      description: Serializer for Education model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: عنوان
+          description: عنوان محتوا
+          maxLength: 200
+        description:
+          type: string
+          title: توضیحات
+          description: توضیحات کامل محتوا
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: تصویر
+          description: تصویر مرتبط با محتوا
+        publish_date:
+          type: string
+          format: date
+          title: تاریخ انتشار
+          description: تاریخ انتشار محتوا
+        tags:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: تاریخ ایجاد
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: تاریخ به‌روزرسانی
+      required:
+      - created_at
+      - description
+      - id
+      - tags
+      - title
+      - updated_at
+    EducationList:
+      type: object
+      description: Lightweight serializer for Education list views
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: عنوان
+          description: عنوان محتوا
+          maxLength: 200
+        publish_date:
+          type: string
+          format: date
+          title: تاریخ انتشار
+          description: تاریخ انتشار محتوا
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+      - id
+      - tags
+      - title
+    Event:
+      type: object
+      description: Serializer for Event model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: عنوان
+          description: عنوان محتوا
+          maxLength: 200
+        description:
+          type: string
+          title: توضیحات
+          description: توضیحات کامل محتوا
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: تصویر
+          description: تصویر مرتبط با محتوا
+        publish_date:
+          type: string
+          format: date
+          title: تاریخ انتشار
+          description: تاریخ انتشار محتوا
+        tags:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: تاریخ ایجاد
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: تاریخ به‌روزرسانی
+      required:
+      - created_at
+      - description
+      - id
+      - tags
+      - title
+      - updated_at
+    EventList:
+      type: object
+      description: Lightweight serializer for Event list views
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: عنوان
+          description: عنوان محتوا
+          maxLength: 200
+        publish_date:
+          type: string
+          format: date
+          title: تاریخ انتشار
+          description: تاریخ انتشار محتوا
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+      - id
+      - tags
+      - title
+    FestivalFormatEnum:
+      enum:
+      - news_report
+      - interview
+      - editorial
+      - headline
+      - infographic
+      - motion_graphic
+      - photo
+      - video_clip
+      - documentary
+      - podcast
+      type: string
+      description: |-
+        * `news_report` - گزارش خبری
+        * `interview` - مصاحبه
+        * `editorial` - یادداشت و سرمقاله
+        * `headline` - تیتر
+        * `infographic` - اینفوگرافی
+        * `motion_graphic` - موشن گرافی
+        * `photo` - عکس
+        * `video_clip` - کلیپ و گزارش ویدیویی
+        * `documentary` - مستند
+        * `podcast` - پادکست
+    FestivalRegistration:
+      type: object
+      description: Festival Registration Serializer
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          title: نام و نام خانوادگی
+          maxLength: 255
+        father_name:
+          type: string
+          title: نام پدر
+          maxLength: 100
+        national_id:
+          type: string
+          title: کد ملی
+          maxLength: 10
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          title: جنسیت
+        education:
+          type: string
+          title: تحصیلات
+          maxLength: 255
+        phone_number:
+          type: string
+          title: شماره تماس
+          maxLength: 11
+        virtual_number:
+          type: string
+          nullable: true
+          title: شماره مجازی
+          maxLength: 50
+        province:
+          allOf:
+          - $ref: '#/components/schemas/Province'
+          readOnly: true
+        city:
+          allOf:
+          - $ref: '#/components/schemas/City'
+          readOnly: true
+        media_name:
+          type: string
+          title: نام رسانه
+          maxLength: 255
+        festival_format:
+          allOf:
+          - $ref: '#/components/schemas/FestivalFormatEnum'
+          title: قالب جشنواره
+        festival_topic:
+          allOf:
+          - $ref: '#/components/schemas/FestivalTopicEnum'
+          title: محور جشنواره
+        special_section:
+          nullable: true
+          title: بخش ویژه
+          oneOf:
+          - $ref: '#/components/schemas/SpecialSectionEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - city
+      - created_at
+      - education
+      - father_name
+      - festival_format
+      - festival_topic
+      - full_name
+      - gender
+      - id
+      - media_name
+      - national_id
+      - phone_number
+      - province
+      - updated_at
+    FestivalRegistrationCreate:
+      type: object
+      description: Festival Registration Create Serializer
+      properties:
+        full_name:
+          type: string
+          title: نام و نام خانوادگی
+          maxLength: 255
+        father_name:
+          type: string
+          title: نام پدر
+          maxLength: 100
+        national_id:
+          type: string
+          title: کد ملی
+          maxLength: 10
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          title: جنسیت
+        education:
+          type: string
+          title: تحصیلات
+          maxLength: 255
+        phone_number:
+          type: string
+          title: شماره تماس
+          maxLength: 11
+        virtual_number:
+          type: string
+          nullable: true
+          title: شماره مجازی
+          maxLength: 50
+        media_name:
+          type: string
+          title: نام رسانه
+          maxLength: 255
+        festival_format:
+          allOf:
+          - $ref: '#/components/schemas/FestivalFormatEnum'
+          title: قالب جشنواره
+        festival_topic:
+          allOf:
+          - $ref: '#/components/schemas/FestivalTopicEnum'
+          title: محور جشنواره
+        special_section:
+          nullable: true
+          title: بخش ویژه
+          oneOf:
+          - $ref: '#/components/schemas/SpecialSectionEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - education
+      - father_name
+      - festival_format
+      - festival_topic
+      - full_name
+      - gender
+      - media_name
+      - national_id
+      - phone_number
+    FestivalRegistrationCreateRequest:
+      type: object
+      description: Festival Registration Create Serializer
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          title: نام و نام خانوادگی
+          maxLength: 255
+        father_name:
+          type: string
+          minLength: 1
+          title: نام پدر
+          maxLength: 100
+        national_id:
+          type: string
+          minLength: 1
+          title: کد ملی
+          maxLength: 10
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          title: جنسیت
+        education:
+          type: string
+          minLength: 1
+          title: تحصیلات
+          maxLength: 255
+        phone_number:
+          type: string
+          minLength: 1
+          title: شماره تماس
+          maxLength: 11
+        virtual_number:
+          type: string
+          nullable: true
+          title: شماره مجازی
+          maxLength: 50
+        province_id:
+          type: integer
+          writeOnly: true
+        city_id:
+          type: integer
+          writeOnly: true
+        media_name:
+          type: string
+          minLength: 1
+          title: نام رسانه
+          maxLength: 255
+        festival_format:
+          allOf:
+          - $ref: '#/components/schemas/FestivalFormatEnum'
+          title: قالب جشنواره
+        festival_topic:
+          allOf:
+          - $ref: '#/components/schemas/FestivalTopicEnum'
+          title: محور جشنواره
+        special_section:
+          nullable: true
+          title: بخش ویژه
+          oneOf:
+          - $ref: '#/components/schemas/SpecialSectionEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - city_id
+      - education
+      - father_name
+      - festival_format
+      - festival_topic
+      - full_name
+      - gender
+      - media_name
+      - national_id
+      - phone_number
+      - province_id
+    FestivalRegistrationList:
+      type: object
+      description: Festival Registration List Serializer - lighter version for lists
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          title: نام و نام خانوادگی
+          maxLength: 255
+        media_name:
+          type: string
+          title: نام رسانه
+          maxLength: 255
+        festival_format:
+          allOf:
+          - $ref: '#/components/schemas/FestivalFormatEnum'
+          title: قالب جشنواره
+        festival_topic:
+          allOf:
+          - $ref: '#/components/schemas/FestivalTopicEnum'
+          title: محور جشنواره
+        province_name:
+          type: string
+          readOnly: true
+        city_name:
+          type: string
+          readOnly: true
+        user_phone:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - city_name
+      - created_at
+      - festival_format
+      - festival_topic
+      - full_name
+      - id
+      - media_name
+      - province_name
+      - user_phone
+    FestivalTopicEnum:
+      enum:
+      - year_slogan
+      - jihad_explanation
+      - media_industry
+      - social_harms
+      - revolution_achievements
+      - basij_action
+      - hope_happiness
+      - family_society
+      - islamic_lifestyle
+      - sacrifice_martyrdom
+      - water_electricity_saving
+      type: string
+      description: |-
+        * `year_slogan` - شعار سال
+        * `jihad_explanation` - جهاد تبیین
+        * `media_industry` - پیوند رسانه و صنعت
+        * `social_harms` - مقابله با آسیب‌های اجتماعی
+        * `revolution_achievements` - دستاوردهای انقلاب اسلامی
+        * `basij_action` - بسیج و حوزه‌های اقدام
+        * `hope_happiness` - امید و نشاط آفرینی
+        * `family_society` - خانواده ،جامعه و فرزندآوری
+        * `islamic_lifestyle` - سبک زندگی ایرانی اسلامی
+        * `sacrifice_martyrdom` - ایثار و شهادت
+        * `water_electricity_saving` - صرفه‌جویی در مصرف آب و برق
+    GenderEnum:
+      enum:
+      - male
+      - female
+      type: string
+      description: |-
+        * `male` - مرد
+        * `female` - زن
+    Input:
+      type: object
+      properties:
+        phone:
+          type: string
+          maxLength: 11
+      required:
+      - phone
+    InputRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 11
+      required:
+      - phone
+    News:
+      type: object
+      description: Serializer for News model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: عنوان
+          description: عنوان محتوا
+          maxLength: 200
+        description:
+          type: string
+          title: توضیحات
+          description: توضیحات کامل محتوا
+        image:
+          type: string
+          format: uri
+          nullable: true
+          title: تصویر
+          description: تصویر مرتبط با محتوا
+        publish_date:
+          type: string
+          format: date
+          title: تاریخ انتشار
+          description: تاریخ انتشار محتوا
+        tags:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: تاریخ ایجاد
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: تاریخ به‌روزرسانی
+      required:
+      - created_at
+      - description
+      - id
+      - tags
+      - title
+      - updated_at
+    NewsList:
+      type: object
+      description: Lightweight serializer for News list views
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: عنوان
+          description: عنوان محتوا
+          maxLength: 200
+        publish_date:
+          type: string
+          format: date
+          title: تاریخ انتشار
+          description: تاریخ انتشار محتوا
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+      - id
+      - tags
+      - title
+    NullEnum:
+      enum:
+      - null
+    PaginatedEducationListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EducationList'
+    PaginatedEventListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventList'
+    PaginatedNewsListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewsList'
+    PatchedUserRequest:
+      type: object
+      description: User Serializer
+      properties:
+        fullName:
+          type: string
+          title: نام کامل
+          description: نام و نام خانوادگی کاربر
+          maxLength: 255
+    Province:
+      type: object
+      description: Province Serializer
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: نام
+          maxLength: 50
+      required:
+      - id
+      - name
+    SpecialSectionEnum:
+      enum:
+      - progress_narrative
+      - field_narrative_12days
+      type: string
+      description: |-
+        * `progress_narrative` - روایت پیشرفت
+        * `field_narrative_12days` - روایت میدان در جنگ ۱۲ روزه
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    TokenVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - token
+    User:
+      type: object
+      description: User Serializer
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fullName:
+          type: string
+          title: نام کامل
+          description: نام و نام خانوادگی کاربر
+          maxLength: 255
+        phone:
+          type: string
+          readOnly: true
+          title: شماره تلفن
+          description: شماره تلفن همراه کاربر
+        is_active:
+          type: boolean
+          readOnly: true
+          title: فعال
+          description: آیا کاربر فعال است؟
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: کارمند
+          description: آیا کاربر دسترسی ادمین دارد؟
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: ابرکاربر
+          description: نشان می‌دهد که این کاربر همهٔ اجازه‌ها را دارد بدون آنکه به
+            صراحت به او اختصاص داده شده باشد.
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: آخرین ورود
+        password:
+          type: string
+          readOnly: true
+          title: گذرواژه
+        groups:
+          type: array
+          items:
+            type: integer
+            title: گروه‌ها
+          readOnly: true
+          title: گروه‌ها
+          description: گروه‌هایی که این کاربر به آنها تعلق دارد. کاربر تمام اجازه‌های
+            مرتبط با این گروه‌ها را دریافت خواهد کرد.
+        user_permissions:
+          type: array
+          items:
+            type: integer
+            title: اجازه‌های کاربر
+          readOnly: true
+          title: اجازه‌های کاربر
+          description: اجازه‌های خاص این کاربر.
+      required:
+      - groups
+      - id
+      - is_active
+      - is_staff
+      - is_superuser
+      - last_login
+      - password
+      - phone
+      - user_permissions
+    UserRequest:
+      type: object
+      description: User Serializer
+      properties:
+        fullName:
+          type: string
+          title: نام کامل
+          description: نام و نام خانوادگی کاربر
+          maxLength: 255
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+- name: Festival Registration
+  description: 🎭 عملیات مربوط به ثبت‌نام در جشنواره
+- name: Content Management
+  description: 📰 مدیریت محتوای سایت (اخبار، آموزش، رویداد)
+- name: Province & City
+  description: 🏛️ اطلاعات استان‌ها و شهرهای ایران
+- name: User Management
+  description: 👤 مدیریت کاربران و احراز هویت

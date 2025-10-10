@@ -24,8 +24,8 @@ class FestivalRegistrationCreateView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     @extend_schema(
-        summary="Create Festival Registration",
-        description="Create a new festival registration. User will be created automatically using phone number.",
+        summary="ثبت‌نام در جشنواره",
+        description="ثبت‌نام جدید در یازدهمین جشنواره رسانه‌ای ابوذر. کاربر بر اساس شماره تلفن به صورت خودکار ایجاد می‌شود.",
         tags=["Festival Registration"],
     )
     def create(self, request, *args, **kwargs):
@@ -83,8 +83,8 @@ class FestivalRegistrationListView(generics.ListAPIView):
     ordering = ["-created_at"]
 
     @extend_schema(
-        summary="List Festival Registrations",
-        description="Get list of all festival registrations with filtering and search capabilities.",
+        summary="فهرست ثبت‌نام‌ها",
+        description="دریافت فهرست کامل ثبت‌نام‌های جشنواره با قابلیت فیلتر و جستجو بر اساس نام، رسانه، استان، شهر و سایر فیلدها.",
         tags=["Festival Registration"],
     )
     def get(self, request, *args, **kwargs):

@@ -148,13 +148,23 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "fa"
 
 TIME_ZONE = os.getenv("TIME_ZONE", default="Asia/Tehran")
 
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
+
+# Persian language support
+LANGUAGES = [
+    ("fa", "فارسی"),
+    ("en", "English"),
+]
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, "locale"),
+]
 
 
 # Static files (CSS, JavaScript, Images)
@@ -182,10 +192,55 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Event Abozar Back API",
-    "DESCRIPTION": "This Is Backend For Event To The Name Of Abozar",
+    "TITLE": "API یازدهمین جشنواره رسانه‌ای ابوذر",
+    "DESCRIPTION": """
+    ## مستندات API جشنواره ابوذر
+    
+    این API برای مدیریت یازدهمین جشنواره رسانه‌ای ابوذر طراحی شده است.
+    
+    ### امکانات اصلی:
+    - 🎭 **ثبت‌نام جشنواره**: ثبت‌نام کاربران در جشنواره
+    - 📰 **مدیریت محتوا**: اخبار، آموزش‌ها و رویدادها  
+    - 🏛️ **اطلاعات جغرافیایی**: استان‌ها و شهرهای ایران
+    - 👤 **مدیریت کاربران**: احراز هویت و پروفایل
+    - 📊 **گزارش‌گیری**: آمار و اطلاعات ثبت‌نام‌ها
+    
+    ### نحوه استفاده:
+    1. برای دسترسی به endpoint های محافظت شده، ابتدا احراز هویت کنید
+    2. از فیلترها و جستجو برای یافتن اطلاعات مورد نظر استفاده کنید
+    3. داده‌ها به صورت صفحه‌بندی شده ارائه می‌شوند
+    
+    🔗 **پشتیبانی**: تیم فنی جشنواره ابوذر
+    """,
     "VERSION": "1.0.0",
     "COMPONENT_SPLIT_REQUEST": True,
+    "CONTACT": {"name": "تیم فنی جشنواره ابوذر", "email": "support@abozar-festival.ir"},
+    "LICENSE": {"name": "جشنواره رسانه‌ای ابوذر"},
+    "TAGS": [
+        {
+            "name": "Festival Registration",
+            "description": "🎭 عملیات مربوط به ثبت‌نام در جشنواره",
+        },
+        {
+            "name": "Content Management",
+            "description": "📰 مدیریت محتوای سایت (اخبار، آموزش، رویداد)",
+        },
+        {
+            "name": "Province & City",
+            "description": "🏛️ اطلاعات استان‌ها و شهرهای ایران",
+        },
+        {"name": "User Management", "description": "👤 مدیریت کاربران و احراز هویت"},
+    ],
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayOperationId": False,
+        "filter": True,
+        "requestSnippetsEnabled": True,
+        "defaultModelsExpandDepth": 2,
+        "defaultModelExpandDepth": 2,
+    },
 }
 
 CKEDITOR_CONFIGS = {

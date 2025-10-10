@@ -10,6 +10,8 @@ from account.models import User
 
 
 class UserAdmin(BaseAdminModel):
+    """Persian User Admin Interface"""
+
     list_display = ["fullName", "phone", "is_active", "last_login"]
     list_editable = ["is_active"]
     readonly_fields = ["last_login"]
@@ -20,9 +22,9 @@ class UserAdmin(BaseAdminModel):
     search_fields = ["phone"]
 
     fieldsets = (
-        ("General Info", {"fields": ("fullName", "phone", "password")}),
+        ("اطلاعات عمومی", {"fields": ("fullName", "phone", "password")}),
         (
-            "Permissions",
+            "مجوزها و دسترسی‌ها",
             {
                 "fields": (
                     "is_active",
@@ -33,13 +35,13 @@ class UserAdmin(BaseAdminModel):
                 ),
             },
         ),
-        ("Important dates", {"fields": ("last_login",)}),
+        ("تاریخ‌های مهم", {"fields": ("last_login",)}),
     )
 
     add_fieldsets = (
-        ("General Info", {"fields": ("fullName", "phone", "password1", "password2")}),
+        ("اطلاعات عمومی", {"fields": ("fullName", "phone", "password1", "password2")}),
         (
-            "Permissions",
+            "مجوزها و دسترسی‌ها",
             {
                 "fields": (
                     "is_active",
@@ -51,6 +53,16 @@ class UserAdmin(BaseAdminModel):
             },
         ),
     )
+
+    # Persian display methods
+    def get_form(self, request, obj=None, **kwargs):
+        """Customize form with Persian help texts"""
+        form = super().get_form(request, obj, **kwargs)
+        if "fullName" in form.base_fields:
+            form.base_fields["fullName"].help_text = "نام کامل کاربر را وارد کنید"
+        if "phone" in form.base_fields:
+            form.base_fields["phone"].help_text = "شماره تلفن همراه کاربر"
+        return form
 
 
 admin.site.register(User, UserAdmin)

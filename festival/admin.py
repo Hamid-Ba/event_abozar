@@ -10,7 +10,7 @@ from province.models import City
 
 @admin.register(FestivalRegistration)
 class FestivalRegistrationAdmin(admin.ModelAdmin):
-    """Festival Registration Admin"""
+    """Festival Registration Admin - Persian Interface"""
 
     list_display = [
         "full_name",
@@ -43,6 +43,9 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
     ]
 
     readonly_fields = ["created_at", "updated_at"]
+
+    # Persian list display headers
+    list_display_links = ["full_name", "media_name"]
 
     fieldsets = (
         (

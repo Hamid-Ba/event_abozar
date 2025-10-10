@@ -50,19 +50,50 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """Custom User Model"""
+    """Custom User Model - Persian Interface"""
 
-    phone = models.CharField(max_length=11, unique=True, validators=[phone_validator])
-    email = models.EmailField(null=True, blank=True)
-    fullName = models.CharField(max_length=255, blank=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    phone = models.CharField(
+        max_length=11,
+        unique=True,
+        validators=[phone_validator],
+        verbose_name="شماره تلفن",
+        help_text="شماره تلفن همراه کاربر",
+    )
+    email = models.EmailField(
+        null=True,
+        blank=True,
+        verbose_name="ایمیل",
+        help_text="آدرس ایمیل کاربر (اختیاری)",
+    )
+    fullName = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="نام کامل",
+        help_text="نام و نام خانوادگی کاربر",
+    )
+    is_active = models.BooleanField(
+        default=True, verbose_name="فعال", help_text="آیا کاربر فعال است؟"
+    )
+    is_staff = models.BooleanField(
+        default=False, verbose_name="کارمند", help_text="آیا کاربر دسترسی ادمین دارد؟"
+    )
 
-    image = models.ImageField(null=True, blank=True, upload_to=image_file_path)
+    image = models.ImageField(
+        null=True,
+        blank=True,
+        upload_to=image_file_path,
+        verbose_name="تصویر پروفایل",
+        help_text="تصویر پروفایل کاربر",
+    )
 
     USERNAME_FIELD = "phone"
 
     objects = UserManager()
+
+    class Meta:
+        verbose_name = "کاربر"
+        verbose_name_plural = "کاربران"
+        ordering = ["-id"]
 
     def __str__(self):
         if self.fullName:

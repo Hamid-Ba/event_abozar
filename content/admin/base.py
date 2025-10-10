@@ -15,6 +15,13 @@ class BaseContentAdmin(admin.ModelAdmin):
     search_fields = ["title", "description"]
     ordering = ["-publish_date"]
     readonly_fields = ["created_at", "updated_at"]
+    list_per_page = 20
+    date_hierarchy = "publish_date"
+    save_on_top = True
+
+    # Persian field names
+    list_display_links = ["title"]
+    empty_value_display = "تعریف نشده"
 
     fieldsets = (
         ("اطلاعات اصلی", {"fields": ("title", "description", "image")}),
@@ -24,3 +31,11 @@ class BaseContentAdmin(admin.ModelAdmin):
             {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
         ),
     )
+
+    # Persian actions
+    actions_on_top = True
+    actions_on_bottom = False
+
+    def get_queryset(self, request):
+        """Optimize queryset with prefetch"""
+        return super().get_queryset(request).prefetch_related("tags")
