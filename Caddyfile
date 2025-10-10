@@ -1,0 +1,8 @@
+http://0.0.0.0 {
+    reverse_proxy web:8080
+    encode gzip
+    log {
+        output stdout
+        format single_field common_log
+    }
+}
