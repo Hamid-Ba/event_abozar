@@ -1,0 +1,134 @@
+services:
+  db:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: event_abozar_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - event_abozar_local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d event_abozar_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7.4.0-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    networks:
+      - event_abozar_local
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.local
+    command: >
+      sh -c "python manage.py migrate --no-input &&
+             python manage.py collectstatic --no-input --clear &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/home/app/event_abozar
+      - static_volume:/home/app/event_abozar/static
+      - media_volume:/home/app/event_abozar/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.local
+    networks:
+      - event_abozar_local
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  celery_worker:
+    build: 
+      context: .
+      dockerfile: Dockerfile.local
+    command: celery -A config worker --loglevel=info --concurrency=2
+    volumes:
+      - .:/home/app/event_abozar
+      - static_volume:/home/app/event_abozar/static
+      - media_volume:/home/app/event_abozar/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    env_file:
+      - .env.local
+    networks:
+      - event_abozar_local
+    restart: unless-stopped
+
+  celery_beat:
+    build: 
+      context: .
+      dockerfile: Dockerfile.local
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/home/app/event_abozar
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+      celery_worker:
+        condition: service_started
+    env_file:
+      - .env.local
+    networks:
+      - event_abozar_local
+    restart: unless-stopped
+
+  flower:
+    build: 
+      context: .
+      dockerfile: Dockerfile.local
+    command: celery -A config flower --port=5555 --basic_auth="admin:admin"
+    ports:
+      - "5555:5555"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      celery_worker:
+        condition: service_started
+    env_file:
+      - .env.local
+    networks:
+      - event_abozar_local
+    restart: unless-stopped
+
+volumes:
+  postgres_local_data:
+  static_volume:
+  media_volume:
+
+networks:
+  event_abozar_local:
+    driver: bridge

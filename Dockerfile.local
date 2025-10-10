@@ -1,0 +1,46 @@
+FROM python:3.10-slim
+
+# Set environment variables
+ENV HOME=/home/app/event_abozar
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create application directory
+RUN mkdir -p $HOME 
+WORKDIR $HOME
+
+# Copy requirements first (for better caching)
+COPY requirements.txt $HOME/
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt --no-cache-dir
+
+# Install development dependencies
+RUN pip install --no-cache-dir \
+    ipdb \
+    django-debug-toolbar \
+    watchdog[watchmedo]
+
+# Copy project files
+COPY . $HOME/
+
+# Create directories for static and media files
+RUN mkdir -p $HOME/static $HOME/media
+
+# Set proper permissions
+RUN chmod +x $HOME/manage.py
+
+# Expose port
+EXPOSE 8000
+
+# Default command (can be overridden in docker-compose)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
