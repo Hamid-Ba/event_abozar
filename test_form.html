@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فرم ثبت نام یازدهمین جشنواره رسانه ای ابوذر</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>فرم ثبت نام یازدهمین جشنواره رسانه ای ابوذر</h1>
+        
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="full_name">نام و نام خانوادگی:</label>
+                <input type="text" id="full_name" name="full_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="father_name">نام پدر:</label>
+                <input type="text" id="father_name" name="father_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="national_id">کد ملی:</label>
+                <input type="text" id="national_id" name="national_id" required maxlength="10">
+            </div>
+
+            <div class="form-group">
+                <label for="gender">جنسیت:</label>
+                <select id="gender" name="gender" required>
+                    <option value="">انتخاب کنید</option>
+                    <option value="male">مرد</option>
+                    <option value="female">زن</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="education">تحصیلات:</label>
+                <input type="text" id="education" name="education" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone_number">شماره تماس:</label>
+                <input type="text" id="phone_number" name="phone_number" required maxlength="11">
+            </div>
+
+            <div class="form-group">
+                <label for="virtual_number">شماره مجازی:</label>
+                <input type="text" id="virtual_number" name="virtual_number">
+            </div>
+
+            <div class="form-group">
+                <label for="province_id">استان:</label>
+                <select id="province_id" name="province_id" required>
+                    <option value="">انتخاب کنید</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="city_id">شهر:</label>
+                <select id="city_id" name="city_id" required>
+                    <option value="">ابتدا استان را انتخاب کنید</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="media_name">نام رسانه:</label>
+                <input type="text" id="media_name" name="media_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="festival_format">قالب های جشنواره:</label>
+                <select id="festival_format" name="festival_format" required>
+                    <option value="">انتخاب کنید</option>
+                    <option value="news_report">گزارش خبری</option>
+                    <option value="interview">مصاحبه</option>
+                    <option value="editorial">یادداشت و سرمقاله</option>
+                    <option value="headline">تیتر</option>
+                    <option value="infographic">اینفوگرافی</option>
+                    <option value="motion_graphic">موشن گرافی</option>
+                    <option value="photo">عکس</option>
+                    <option value="video_clip">کلیپ و گزارش ویدیویی</option>
+                    <option value="documentary">مستند</option>
+                    <option value="podcast">پادکست</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="festival_topic">محورهای جشنواره:</label>
+                <select id="festival_topic" name="festival_topic" required>
+                    <option value="">انتخاب کنید</option>
+                    <option value="year_slogan">شعار سال</option>
+                    <option value="jihad_explanation">جهاد تبیین</option>
+                    <option value="media_industry">پیوند رسانه و صنعت</option>
+                    <option value="social_harms">مقابله با آسیب‌های اجتماعی</option>
+                    <option value="revolution_achievements">دستاوردهای انقلاب اسلامی</option>
+                    <option value="basij_action">بसیج و حوزه‌های اقدам</option>
+                    <option value="hope_happiness">امید و نشاط آفرینی</option>
+                    <option value="family_society">خانواده ،جامعه و فرزندآوری</option>
+                    <option value="islamic_lifestyle">سبک زندگی ایرانی اسلامی</option>
+                    <option value="sacrifice_martyrdom">ایثار و شهادت</option>
+                    <option value="water_electricity_saving">صرفه‌جویی در مصرف آب و برق</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="special_section">بخش‌های ویژه:</label>
+                <select id="special_section" name="special_section">
+                    <option value="">انتخاب کنید (اختیاری)</option>
+                    <option value="progress_narrative">روایت پیشرفت</option>
+                    <option value="field_narrative_12days">روایت میدان در جنگ ۱۲ روزه</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn">ثبت نام</button>
+        </form>
+
+        <div id="response" class="response"></div>
+    </div>
+
+    <script>
+        // Load provinces on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/festival/provinces/');
+                const provinces = await response.json();
+                
+                const provinceSelect = document.getElementById('province_id');
+                provinces.forEach(province => {
+                    const option = document.createElement('option');
+                    option.value = province.id;
+                    option.textContent = province.name;
+                    provinceSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading provinces:', error);
+            }
+        });
+
+        // Load cities when province changes
+        document.getElementById('province_id').addEventListener('change', async function() {
+            const provinceId = this.value;
+            const citySelect = document.getElementById('city_id');
+            
+            // Clear existing cities
+            citySelect.innerHTML = '<option value="">انتخاب کنید</option>';
+            
+            if (provinceId) {
+                try {
+                    const response = await fetch(`http://127.0.0.1:8000/festival/cities/?province_id=${provinceId}`);
+                    const cities = await response.json();
+                    
+                    cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        citySelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading cities:', error);
+                }
+            }
+        });
+
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Convert string IDs to integers
+            data.province_id = parseInt(data.province_id);
+            data.city_id = parseInt(data.city_id);
+            
+            // Remove empty special_section if not selected
+            if (!data.special_section) {
+                delete data.special_section;
+            }
+            
+            const responseDiv = document.getElementById('response');
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/festival/registration/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    responseDiv.className = 'response success';
+                    responseDiv.innerHTML = `<strong>موفق:</strong> ${result.message}`;
+                    this.reset();
+                    // Reset dropdowns
+                    document.getElementById('city_id').innerHTML = '<option value="">ابتدا استان را انتخاب کنید</option>';
+                } else {
+                    responseDiv.className = 'response error';
+                    let errorMsg = 'خطا در ثبت نام: ';
+                    if (result.error) {
+                        errorMsg += result.error;
+                    } else if (result.non_field_errors) {
+                        errorMsg += result.non_field_errors.join(', ');
+                    } else {
+                        errorMsg += JSON.stringify(result);
+                    }
+                    responseDiv.innerHTML = `<strong>خطا:</strong> ${errorMsg}`;
+                }
+                
+                responseDiv.style.display = 'block';
+                
+            } catch (error) {
+                responseDiv.className = 'response error';
+                responseDiv.innerHTML = `<strong>خطا:</strong> مشکل در ارتباط با سرور: ${error.message}`;
+                responseDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

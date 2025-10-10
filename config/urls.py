@@ -15,6 +15,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("common.urls")),
     path("account/", include("account.urls")),
+    path("festival/", include("festival.urls")),
+    path("content/", include("content.urls")),
 ]
 
 if settings.DEBUG:

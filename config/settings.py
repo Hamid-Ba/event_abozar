@@ -45,6 +45,10 @@ EVENT_ABOZAR_APPS = [
     "account.apps.AccountConfig",
     "common",
     "monitoring",
+    "festival",
+    "siteinfo",
+    "province",
+    "content",
 ]
 
 THIRD_PARTY_APPS = [
