@@ -80,6 +80,7 @@ INSTALLED_APPS = (
 )
 
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", cast=Csv())
+CORS_ALLOW_ALL_ORIGINS = True
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
