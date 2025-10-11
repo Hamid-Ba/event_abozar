@@ -43,10 +43,19 @@ class NewsListSerializer(serializers.ModelSerializer):
     """
 
     tags = TagListSerializerField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = News
-        fields = ["id", "title", "publish_date", "tags"]
+        fields = ["id", "title", "publish_date", "tags", "image"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class EducationSerializer(BaseContentSerializer):
@@ -64,10 +73,19 @@ class EducationListSerializer(serializers.ModelSerializer):
     """
 
     tags = TagListSerializerField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Education
-        fields = ["id", "title", "publish_date", "tags"]
+        fields = ["id", "title", "publish_date", "tags", "image"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class EventSerializer(BaseContentSerializer):
@@ -85,7 +103,16 @@ class EventListSerializer(serializers.ModelSerializer):
     """
 
     tags = TagListSerializerField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
-        fields = ["id", "title", "publish_date", "tags"]
+        fields = ["id", "title", "publish_date", "tags", "image"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image:
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
