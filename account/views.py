@@ -4,9 +4,9 @@ Account Module Views
 from rest_framework import status, serializers
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt import authentication
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from rest_framework import generics, permissions, views
-
+from django.contrib.auth.hashers import make_password
 
 from rest_framework.response import Response
 from account.serializers import (
@@ -16,89 +16,247 @@ from monitoring.models.observability import CodeLog
 
 from . import services
 
+User = get_user_model()
 
-class LoginOrRegisterView(views.APIView):
+
+class RegisterView(views.APIView):
+    """User Registration View"""
+
     permission_classes = [permissions.AllowAny]
 
-    class InputSerializer(serializers.Serializer):
+    class RegisterSerializer(serializers.Serializer):
+        full_name = serializers.CharField(
+            max_length=255,
+            required=True,
+            error_messages={
+                "blank": "نام کامل خود را وارد نمایید",
+                "required": "نام کامل خود را وارد نمایید",
+            },
+        )
         phone = serializers.CharField(
             max_length=11,
             required=True,
             error_messages={
-                "blank": "موبایل خود را وارد نمایید",
-                "required": "موبایل خود را وارد نمایید",
+                "blank": "شماره تلفن خود را وارد نمایید",
+                "required": "شماره تلفن خود را وارد نمایید",
+            },
+        )
+        password = serializers.CharField(
+            min_length=6,
+            required=True,
+            error_messages={
+                "blank": "رمز عبور خود را وارد نمایید",
+                "required": "رمز عبور خود را وارد نمایید",
+                "min_length": "رمز عبور باید حداقل ۶ کاراکتر باشد",
             },
         )
 
-        def validate(self, attrs):
-            phone = attrs.get("phone")
-            if not phone.isdigit():
-                return super().validate(attrs)
-            return attrs
+        def validate_phone(self, value):
+            """Validate Iranian phone number"""
+            if not value.startswith("09"):
+                raise serializers.ValidationError("شماره تلفن باید با 09 شروع شود")
+            if len(value) != 11:
+                raise serializers.ValidationError("شماره تلفن باید 11 رقم باشد")
+            if not value.isdigit():
+                raise serializers.ValidationError("شماره تلفن باید فقط شامل اعداد باشد")
+            return value
 
-    @extend_schema(request=InputSerializer, responses=InputSerializer)
-    def post(self, request):
-        serializer = self.InputSerializer(data=request.data)
-        if serializer.is_valid():
-            otp = services.generate_otp(phone=serializer.validated_data.get("phone"))
-            return Response(
-                {
-                    "message": "OTP Has Been Sent Successfully",
+        def validate_full_name(self, value):
+            """Validate full name"""
+            if len(value.strip()) < 2:
+                raise serializers.ValidationError("نام کامل باید حداقل ۲ کاراکتر باشد")
+            return value.strip()
+
+    @extend_schema(
+        request=RegisterSerializer,
+        summary="ثبت نام کاربر",
+        description="ثبت نام کاربر جدید با نام کامل، شماره تلفن و رمز عبور. اگر کاربر با این شماره تلفن وجود داشته باشد، رمز عبور جدید برای او اعمال می‌شود.",
+        tags=["Authentication"],
+        responses={
+            201: {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string"},
+                    "user": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "integer"},
+                            "phone": {"type": "string"},
+                            "full_name": {"type": "string"},
+                        },
+                    },
                 },
-                status=status.HTTP_200_OK,
-            )
+            },
+            400: {"type": "object", "properties": {"error": {"type": "string"}}},
+        },
+    )
+    def post(self, request):
+        serializer = self.RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            phone = serializer.validated_data.get("phone")
+            full_name = serializer.validated_data.get("full_name")
+            password = serializer.validated_data.get("password")
+
+            try:
+                # Check if user exists (might be from festival registration)
+                user, created = User.objects.get_or_create(
+                    phone=phone,
+                    defaults={
+                        "fullName": full_name,
+                    },
+                )
+
+                # Only update fullName for new users, but always update password
+                if created:
+                    user.fullName = full_name
+                user.set_password(password)
+                user.save()
+
+                if created:
+                    message = "کاربر با موفقیت ثبت نام شد"
+                else:
+                    message = "رمز عبور کاربر با موفقیت به‌روزرسانی شد"
+
+                return Response(
+                    {
+                        "message": message,
+                        "user": {
+                            "id": user.id,
+                            "phone": user.phone,
+                            "full_name": user.fullName,
+                        },
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+
+            except Exception as e:
+                return Response(
+                    {"error": "خطا در ثبت نام کاربر"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AuthTokenView(views.APIView):
-    """Auth Token View For Create JWT Token"""
+class LoginView(views.APIView):
+    """User Login View"""
 
-    class AuthTokenSerializer(serializers.Serializer):
+    permission_classes = [permissions.AllowAny]
+
+    class LoginSerializer(serializers.Serializer):
         phone = serializers.CharField(
             max_length=11,
             required=True,
             error_messages={
-                "blank": "موبایل خود را وارد نمایید",
-                "required": "موبایل خود را وارد نمایید",
+                "blank": "شماره تلفن خود را وارد نمایید",
+                "required": "شماره تلفن خود را وارد نمایید",
             },
         )
         password = serializers.CharField(
             required=True,
             error_messages={
-                "blank": "رمزعبور خود را وارد نمایید",
-                "required": "رمزعبور خود را وارد نمایید",
+                "blank": "رمز عبور خود را وارد نمایید",
+                "required": "رمز عبور خود را وارد نمایید",
             },
         )
 
-    @extend_schema(request=AuthTokenSerializer, responses=AuthTokenSerializer)
+        def validate_phone(self, value):
+            """Validate Iranian phone number"""
+            if not value.startswith("09"):
+                raise serializers.ValidationError("شماره تلفن باید با 09 شروع شود")
+            if len(value) != 11:
+                raise serializers.ValidationError("شماره تلفن باید 11 رقم باشد")
+            if not value.isdigit():
+                raise serializers.ValidationError("شماره تلفن باید فقط شامل اعداد باشد")
+            return value
+
+    @extend_schema(
+        request=LoginSerializer,
+        summary="ورود کاربر",
+        description="ورود کاربر با شماره تلفن و رمز عبور و دریافت JWT توکن",
+        tags=["Authentication"],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string"},
+                    "user": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "integer"},
+                            "phone": {"type": "string"},
+                            "full_name": {"type": "string"},
+                        },
+                    },
+                    "tokens": {
+                        "type": "object",
+                        "properties": {
+                            "refresh": {"type": "string"},
+                            "access": {"type": "string"},
+                        },
+                    },
+                },
+            },
+            400: {"type": "object", "properties": {"error": {"type": "string"}}},
+        },
+    )
     def post(self, request):
-        serializer = self.AuthTokenSerializer(data=request.data)
+        serializer = self.LoginSerializer(data=request.data)
         if serializer.is_valid():
             phone = serializer.validated_data.get("phone")
-            otp = serializer.validated_data.get("password")
+            password = serializer.validated_data.get("password")
 
-            is_verify = services.verify_otp(phone, otp)
+            try:
+                # Check if user exists
+                user = User.objects.filter(phone=phone).first()
+                if not user:
+                    return Response(
+                        {"error": "کاربری با این شماره تلفن یافت نشد"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
-            if is_verify:
-                services.get_or_create_user(phone, otp)
-                try:
+                # Check if user has a password set
+                if not user.password:
+                    return Response(
+                        {"error": "لطفاً ابتدا ثبت نام کنید"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Authenticate user
+                if user.check_password(password):
+                    # Generate JWT tokens
                     refresh = services.generate_jwt(phone)
+                    if refresh:
+                        return Response(
+                            {
+                                "message": "ورود با موفقیت انجام شد",
+                                "user": {
+                                    "id": user.id,
+                                    "phone": user.phone,
+                                    "full_name": user.fullName,
+                                },
+                                "tokens": {
+                                    "refresh": str(refresh),
+                                    "access": str(refresh.access_token),
+                                },
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+                    else:
+                        return Response(
+                            {"error": "خطا در تولید توکن"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                else:
+                    return Response(
+                        {"error": "رمز عبور اشتباه است"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
-                    return Response(
-                        {
-                            "phone": phone,
-                            "refresh": str(refresh),
-                            "access": str(refresh.access_token),
-                        },
-                        status=status.HTTP_201_CREATED,
-                    )
-                except:
-                    return Response(
-                        {"message": "Invalid Data"}, status=status.HTTP_400_BAD_REQUEST
-                    )
-            else:
+            except Exception as e:
                 return Response(
-                    {"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST
+                    {"error": "خطا در ورود کاربر"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

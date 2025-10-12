@@ -7,9 +7,8 @@ from django.urls import reverse
 from rest_framework import status
 from django.contrib.auth import get_user_model
 
-AUTH_URL = reverse("account:otp")
-# LOGOUT_URL = reverse("account:logout")
-TOKEN_URL = reverse("account:token")
+REGISTER_URL = reverse("account:register")
+LOGIN_URL = reverse("account:login")
 ME_USER_URL = reverse("account:me")
 
 
@@ -24,39 +23,107 @@ class PublicTests(TestCase):
     def setUp(self):
         self.client = APIClient()
 
-    def test_register_should_work_properly(self):
-        """Test User Registeration"""
+    def test_register_new_user_should_work(self):
+        """Test User Registration with new user"""
         payload = {
+            "full_name": "احمد محمدی",
             "phone": "09151498722",
+            "password": "123456",
         }
 
-        res = self.client.post(AUTH_URL, payload)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        res = self.client.post(REGISTER_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
-        # is_user_exist = get_user_model().objects.filter(phone=payload["phone"]).exists()
-        # self.assertTrue(is_user_exist)
+        # Check user was created
+        user_exists = get_user_model().objects.filter(phone=payload["phone"]).exists()
+        self.assertTrue(user_exists)
+
+        # Check response data
+        self.assertIn("message", res.data)
+        self.assertIn("user", res.data)
+        self.assertEqual(res.data["user"]["phone"], payload["phone"])
+        self.assertEqual(res.data["user"]["full_name"], payload["full_name"])
+
+    def test_register_existing_user_updates_password_only(self):
+        """Test User Registration with existing user updates password but keeps original fullName"""
+        # Create existing user first
+        existing_user = create_user("09151498722", password="oldpassword")
+        existing_user.fullName = "Original Name"
+        existing_user.save()
+
+        payload = {
+            "full_name": "New Name (should be ignored)",
+            "phone": "09151498722",
+            "password": "newpassword",
+        }
+
+        res = self.client.post(REGISTER_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        # Check password was updated but fullName was NOT changed
+        existing_user.refresh_from_db()
+        self.assertEqual(
+            existing_user.fullName, "Original Name"
+        )  # Should keep original name
+        self.assertTrue(
+            existing_user.check_password(payload["password"])
+        )  # Password should be updated
+
+        # Check message indicates update
+        self.assertIn("به‌روزرسانی", res.data["message"])
+
+        # Check response returns original fullName, not the submitted one
+        self.assertEqual(res.data["user"]["full_name"], "Original Name")
+
+    def test_register_with_invalid_phone(self):
+        """Test registration with invalid phone number"""
+        payload = {
+            "full_name": "احمد محمدی",
+            "phone": "123456789",  # Invalid phone
+            "password": "123456",
+        }
+
+        res = self.client.post(REGISTER_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("phone", res.data)
 
     def test_login_should_work_properly(self):
-        """Test User Login"""
-        payload = {
-            "phone": "09151498722",
-        }
-        user = create_user(payload["phone"], password="123456")
-        old_password = user.password
+        """Test User Login with correct credentials"""
+        # Create user first
+        user = create_user("09151498722", password="123456")
+        user.fullName = "احمد محمدی"
+        user.save()
 
-        res = self.client.post(AUTH_URL, payload)
+        payload = {"phone": "09151498722", "password": "123456"}
+
+        res = self.client.post(LOGIN_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    # def test_create_token_should_work_properly(self):
-    #     """Test For Creation The Token"""
-    #     payload = {"phone": "09151498722", "password": "123456"}
+        # Check response contains tokens and user info
+        self.assertIn("tokens", res.data)
+        self.assertIn("access", res.data["tokens"])
+        self.assertIn("refresh", res.data["tokens"])
+        self.assertIn("user", res.data)
+        self.assertEqual(res.data["user"]["phone"], payload["phone"])
 
-    #     create_user(payload["phone"], payload["password"])
+    def test_login_with_wrong_password(self):
+        """Test login with wrong password"""
+        # Create user first
+        create_user("09151498722", password="123456")
 
-    #     res = self.client.post(TOKEN_URL, payload)
+        payload = {"phone": "09151498722", "password": "wrongpassword"}
 
-    #     # self.assertIn("access", res.data)
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
+        res = self.client.post(LOGIN_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", res.data)
+
+    def test_login_with_nonexistent_user(self):
+        """Test login with user that doesn't exist"""
+        payload = {"phone": "09999999999", "password": "123456"}
+
+        res = self.client.post(LOGIN_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", res.data)
 
 
 class PrivateTest(TestCase):

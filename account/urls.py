@@ -18,10 +18,11 @@ from rest_framework_simplejwt.views import (
 app_name = "account"
 
 urlpatterns = [
-    # path("",include(router.urls)),
-    path("login_or_register/", views.LoginOrRegisterView.as_view(), name="otp"),
-    path("token/", views.AuthTokenView.as_view(), name="token"),
+    # Authentication endpoints
+    path("register/", views.RegisterView.as_view(), name="register"),
+    path("login/", views.LoginView.as_view(), name="login"),
     path("me/", views.UserView.as_view(), name="me"),
+    # JWT token management
     path("refresh/", TokenRefreshView.as_view(), name="refresh"),
     path("verify/", TokenVerifyView.as_view(), name="verify"),
 ]
