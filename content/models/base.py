@@ -5,6 +5,7 @@ Abstract base model for content with common fields
 from django.db import models
 from django.utils import timezone
 from taggit.managers import TaggableManager
+from ckeditor.fields import RichTextField
 
 
 class BaseContentModel(models.Model):
@@ -15,9 +16,7 @@ class BaseContentModel(models.Model):
     title = models.CharField(
         max_length=200, verbose_name="عنوان", help_text="عنوان محتوا"
     )
-    description = models.TextField(
-        verbose_name="توضیحات", help_text="توضیحات کامل محتوا"
-    )
+    description = RichTextField(verbose_name="توضیحات", help_text="توضیحات کامل محتوا")
     image = models.ImageField(
         upload_to="content/images/",
         blank=True,

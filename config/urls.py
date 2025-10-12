@@ -13,6 +13,7 @@ urlpatterns = [
         name="swagger-ui",
     ),
     path("admin/", admin.site.urls),
+    path("ckeditor/", include("ckeditor_uploader.urls")),
     path("api/", include("common.urls")),
     path("account/", include("account.urls")),
     path("festival/", include("festival.urls")),

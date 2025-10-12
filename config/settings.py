@@ -60,6 +60,7 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     "django_filters",
     "ckeditor",
+    "ckeditor_uploader",
     "django_jalali",
     "jalali_date",
     "taggit",
@@ -245,11 +246,35 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+CKEDITOR_UPLOAD_PATH = "uploads/"
 CKEDITOR_CONFIGS = {
     "default": {
-        "toolbar": "none",
-        "height": 200,
-        "width": 600,
+        "toolbar": "Custom",
+        "toolbar_Custom": [
+            ["Bold", "Italic", "Underline"],
+            [
+                "NumberedList",
+                "BulletedList",
+                "-",
+                "Outdent",
+                "Indent",
+                "-",
+                "JustifyLeft",
+                "JustifyCenter",
+                "JustifyRight",
+                "JustifyBlock",
+            ],
+            ["Link", "Unlink"],
+            ["RemoveFormat", "Source"],
+            ["Format", "Font", "FontSize"],
+            ["TextColor", "BGColor"],
+            ["Blockquote"],
+        ],
+        "height": 300,
+        "width": "100%",
+        "removePlugins": "stylesheetparser",
+        "allowedContent": True,
+        "extraPlugins": "codesnippet",
     },
 }
 
