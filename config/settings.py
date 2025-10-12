@@ -49,6 +49,7 @@ EVENT_ABOZAR_APPS = [
     "siteinfo",
     "province",
     "content",
+    "info",
 ]
 
 THIRD_PARTY_APPS = [
