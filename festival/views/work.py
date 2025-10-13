@@ -145,3 +145,33 @@ class UserFestivalRegistrationsView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class WorkByFestivalView(generics.ListAPIView):
+    """List works by festival registration id for authenticated user"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = WorkListSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    search_fields = ["title", "description"]
+    ordering_fields = ["created_at", "updated_at", "title"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        user = self.request.user
+        festival_id = self.kwargs.get("festival_id")
+        return Work.objects.filter(
+            festival_registration__user=user, festival_registration_id=festival_id
+        ).select_related(
+            "festival_registration",
+            "festival_registration__province",
+            "festival_registration__city",
+        )
+
+    @extend_schema(
+        summary="فهرست آثار بر اساس ثبت‌نام جشنواره",
+        description="دریافت فهرست آثار ثبت شده توسط کاربر برای یک ثبت‌نام جشنواره خاص (با festival_id)",
+        tags=["Works"],
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)

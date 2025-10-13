@@ -15,6 +15,7 @@ from .work import (
     WorkListCreateView,
     WorkDetailView,
     UserFestivalRegistrationsView,
+    WorkByFestivalView,
 )
 
 __all__ = [
@@ -27,6 +28,7 @@ __all__ = [
     "WorkListCreateView",
     "WorkDetailView",
     "UserFestivalRegistrationsView",
+    "WorkByFestivalView",
     "MyFestivalRegistrationListView",
     "MyFestivalRegistrationDetailView",
     "StatisticsView",

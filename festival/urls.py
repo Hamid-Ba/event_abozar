@@ -16,6 +16,7 @@ from festival.views import (
     MyFestivalRegistrationDetailView,
     StatisticsView,
     MyStatisticsView,
+    WorkByFestivalView,
 )
 
 app_name = "festival"
@@ -48,6 +49,11 @@ urlpatterns = [
     # Work endpoints
     path("works/", WorkListCreateView.as_view(), name="work-list"),
     path("works/<int:pk>/", WorkDetailView.as_view(), name="work-detail"),
+    path(
+        "works/by-festival/<int:festival_id>/",
+        WorkByFestivalView.as_view(),
+        name="work-list-by-festival",
+    ),
     # User's festival registrations (for work creation)
     path(
         "my-registrations/",
