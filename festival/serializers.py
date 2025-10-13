@@ -2,7 +2,7 @@
 Festival Registration Serializers
 """
 from rest_framework import serializers
-from festival.models import FestivalRegistration
+from festival.models import FestivalRegistration, Work
 from festival.services import create_festival_registration
 from province.serializers import ProvinceSerializer, CitySerializer
 
@@ -169,3 +169,187 @@ class FestivalRegistrationListSerializer(serializers.ModelSerializer):
             "user_phone",
             "created_at",
         ]
+
+
+class WorkListSerializer(serializers.ModelSerializer):
+    """Work List Serializer for listing works"""
+
+    registration_name = serializers.CharField(
+        source="festival_registration.full_name", read_only=True
+    )
+    media_name = serializers.CharField(
+        source="festival_registration.media_name", read_only=True
+    )
+    festival_format = serializers.CharField(
+        source="festival_registration.get_festival_format_display", read_only=True
+    )
+    festival_topic = serializers.CharField(
+        source="festival_registration.get_festival_topic_display", read_only=True
+    )
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Work
+        fields = [
+            "id",
+            "title",
+            "description",
+            "file_url",
+            "registration_name",
+            "media_name",
+            "festival_format",
+            "festival_topic",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_file_url(self, obj):
+        """Get absolute URL for file"""
+        if obj.file:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+
+
+class WorkDetailSerializer(serializers.ModelSerializer):
+    """Work Detail Serializer for detailed work information"""
+
+    festival_registration = FestivalRegistrationSerializer(read_only=True)
+    file_url = serializers.SerializerMethodField()
+    file_size = serializers.SerializerMethodField()
+    file_name = serializers.SerializerMethodField()
+    unique_filename = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Work
+        fields = [
+            "id",
+            "title",
+            "description",
+            "file",
+            "file_url",
+            "file_size",
+            "file_name",
+            "unique_filename",
+            "festival_registration",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def get_file_url(self, obj):
+        """Get absolute URL for file"""
+        if obj.file:
+            request = self.context.get("request")
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+
+    def get_file_size(self, obj):
+        """Get human readable file size"""
+        if obj.file:
+            try:
+                size = obj.file.size
+                if size < 1024:
+                    return f"{size} bytes"
+                elif size < 1024 * 1024:
+                    return f"{size / 1024:.1f} KB"
+                else:
+                    return f"{size / (1024 * 1024):.1f} MB"
+            except Exception:
+                return None
+        return None
+
+    def get_file_name(self, obj):
+        """Get display-friendly file name"""
+        if obj.file:
+            # Return the display name based on work title + original extension
+            return obj.file_display_name
+        return None
+
+    def get_unique_filename(self, obj):
+        """Get the unique filename stored in the system"""
+        if obj.file:
+            return obj.unique_filename
+        return None
+
+
+class WorkCreateSerializer(serializers.ModelSerializer):
+    """Work Create/Update Serializer for creating and updating works"""
+
+    class Meta:
+        model = Work
+        fields = [
+            "festival_registration",
+            "title",
+            "description",
+            "file",
+        ]
+
+    def validate_festival_registration(self, value):
+        """Validate that the user owns this festival registration"""
+        user = self.context["request"].user
+        if value.user != user:
+            raise serializers.ValidationError(
+                "شما تنها می‌توانید برای ثبت نام خود اثر ایجاد کنید."
+            )
+        return value
+
+    def validate_title(self, value):
+        """Validate title"""
+        if len(value.strip()) < 3:
+            raise serializers.ValidationError("عنوان اثر باید حداقل ۳ کاراکتر باشد.")
+        return value.strip()
+
+    def validate_description(self, value):
+        """Validate description"""
+        if value and len(value.strip()) < 10:
+            raise serializers.ValidationError("توضیحات اثر باید حداقل ۱۰ کاراکتر باشد.")
+        return value.strip() if value else ""
+
+    def validate_file(self, value):
+        """Validate uploaded file"""
+        if not value:
+            raise serializers.ValidationError("فایل اثر الزامی است.")
+
+        # Check file size (max 110MB)
+        if value.size > 110 * 1024 * 1024:
+            raise serializers.ValidationError("حجم فایل نباید بیش از ۱۱۰ مگابایت باشد.")
+
+        # Check file extension
+        allowed_extensions = [
+            ".pdf",
+            ".doc",
+            ".docx",
+            ".txt",
+            ".rtf",  # Documents
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".bmp",  # Images
+            ".mp4",
+            ".avi",
+            ".mov",
+            ".mkv",
+            ".wmv",  # Videos
+            ".mp3",
+            ".wav",
+            ".aac",
+            ".flac",  # Audio
+            ".zip",
+            ".rar",
+            ".7z",  # Archives
+        ]
+
+        file_name = value.name.lower()
+        if not any(file_name.endswith(ext) for ext in allowed_extensions):
+            raise serializers.ValidationError(
+                "فرمت فایل مجاز نیست. فرمت‌های مجاز: " + ", ".join(allowed_extensions)
+            )
+
+        return value

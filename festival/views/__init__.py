@@ -7,6 +7,12 @@ from .festival_registration import (
     CityListView,
 )
 
+from .work import (
+    WorkListCreateView,
+    WorkDetailView,
+    UserFestivalRegistrationsView,
+)
+
 __all__ = [
     "FestivalRegistrationCreateView",
     "FestivalRegistrationListView",
@@ -14,4 +20,7 @@ __all__ = [
     "FestivalRegistrationSearchView",
     "ProvinceListView",
     "CityListView",
+    "WorkListCreateView",
+    "WorkDetailView",
+    "UserFestivalRegistrationsView",
 ]

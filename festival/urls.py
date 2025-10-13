@@ -9,6 +9,9 @@ from festival.views import (
     FestivalRegistrationSearchView,
     ProvinceListView,
     CityListView,
+    WorkListCreateView,
+    WorkDetailView,
+    UserFestivalRegistrationsView,
 )
 
 app_name = "festival"
@@ -38,4 +41,13 @@ urlpatterns = [
     # Province and City endpoints
     path("provinces/", ProvinceListView.as_view(), name="province-list"),
     path("cities/", CityListView.as_view(), name="city-list"),
+    # Work endpoints
+    path("works/", WorkListCreateView.as_view(), name="work-list"),
+    path("works/<int:pk>/", WorkDetailView.as_view(), name="work-detail"),
+    # User's festival registrations (for work creation)
+    path(
+        "my-registrations/",
+        UserFestivalRegistrationsView.as_view(),
+        name="user-registrations",
+    ),
 ]
