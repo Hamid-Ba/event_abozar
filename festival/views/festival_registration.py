@@ -12,6 +12,8 @@ from festival.serializers import (
     FestivalRegistrationSerializer,
     FestivalRegistrationCreateSerializer,
     FestivalRegistrationListSerializer,
+    MyFestivalRegistrationListSerializer,
+    MyFestivalRegistrationDetailSerializer,
 )
 from province.models import Province, City
 from province.serializers import ProvinceSerializer, CitySerializer
@@ -220,4 +222,68 @@ class CityListView(generics.ListAPIView):
                 {"error": "لطفاً شناسه استان را وارد کنید"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        return super().get(request, *args, **kwargs)
+
+
+class MyFestivalRegistrationListView(generics.ListAPIView):
+    """List authenticated user's festival registrations"""
+
+    serializer_class = MyFestivalRegistrationListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+
+    # Filter fields
+    filterset_fields = [
+        "festival_format",
+        "festival_topic",
+        "gender",
+        "special_section",
+    ]
+
+    # Search fields
+    search_fields = [
+        "full_name",
+        "media_name",
+        "festival_format",
+        "festival_topic",
+    ]
+
+    # Ordering
+    ordering_fields = ["created_at", "full_name", "media_name"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        """Return only the authenticated user's festival registrations"""
+        return FestivalRegistration.objects.select_related("province", "city").filter(
+            user=self.request.user
+        )
+
+    @extend_schema(
+        summary="فهرست ثبت‌نام‌های من",
+        description="دریافت فهرست ثبت‌نام‌های جشنواره کاربر احراز هویت شده با قابلیت فیلتر و جستجو.",
+        tags=["My Festival Registration"],
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+
+class MyFestivalRegistrationDetailView(generics.RetrieveAPIView):
+    """Get authenticated user's festival registration detail"""
+
+    serializer_class = MyFestivalRegistrationDetailSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        """Return only the authenticated user's festival registrations"""
+        return FestivalRegistration.objects.select_related("province", "city").filter(
+            user=self.request.user
+        )
+
+    @extend_schema(
+        summary="جزئیات ثبت‌نام من",
+        description="دریافت جزئیات کامل یک ثبت‌نام جشنواره متعلق به کاربر احراز هویت شده.",
+        tags=["My Festival Registration"],
+    )
+    def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)

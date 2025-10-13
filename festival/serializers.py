@@ -171,6 +171,59 @@ class FestivalRegistrationListSerializer(serializers.ModelSerializer):
         ]
 
 
+class MyFestivalRegistrationListSerializer(serializers.ModelSerializer):
+    """Serializer for my festival registrations list view"""
+
+    province = ProvinceSerializer(read_only=True)
+    city = CitySerializer(read_only=True)
+
+    class Meta:
+        model = FestivalRegistration
+        fields = [
+            "id",
+            "full_name",
+            "gender",
+            "phone_number",
+            "province",
+            "city",
+            "media_name",
+            "festival_format",
+            "festival_topic",
+            "special_section",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
+class MyFestivalRegistrationDetailSerializer(serializers.ModelSerializer):
+    """Serializer for my festival registration detail view"""
+
+    province = ProvinceSerializer(read_only=True)
+    city = CitySerializer(read_only=True)
+
+    class Meta:
+        model = FestivalRegistration
+        fields = [
+            "id",
+            "full_name",
+            "father_name",
+            "national_id",
+            "gender",
+            "education",
+            "phone_number",
+            "virtual_number",
+            "province",
+            "city",
+            "media_name",
+            "festival_format",
+            "festival_topic",
+            "special_section",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
 class WorkListSerializer(serializers.ModelSerializer):
     """Work List Serializer for listing works"""
 

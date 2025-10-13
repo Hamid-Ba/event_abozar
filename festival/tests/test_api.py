@@ -454,6 +454,233 @@ class FestivalRegistrationAPITest(APITestCase):
         )  # Alphabetically first
 
 
+class AuthenticatedFestivalRegistrationAPITest(APITestCase):
+    """Test cases for authenticated Festival Registration API endpoints"""
+
+    def setUp(self):
+        """Set up test data"""
+        # Create test provinces and cities
+        self.province = Province.objects.create(name="تهران", slug="tehran")
+        self.city = City.objects.create(
+            name="تهران", slug="tehran-city", province=self.province
+        )
+
+        self.other_province = Province.objects.create(name="اصفهان", slug="isfahan")
+        self.other_city = City.objects.create(
+            name="اصفهان", slug="isfahan-city", province=self.other_province
+        )
+
+        # Create test users
+        self.user1 = User.objects.create(phone="09123456789", fullName="علی احمدی")
+        self.user2 = User.objects.create(phone="09123456790", fullName="فاطمه حسینی")
+
+        # Create festival registrations for users
+        self.registration1 = FestivalRegistration.objects.create(
+            user=self.user1,
+            full_name="علی احمدی",
+            father_name="حسین",
+            national_id="1234567890",
+            gender="male",
+            education="کارشناسی",
+            phone_number="09123456789",
+            province=self.province,
+            city=self.city,
+            media_name="رسانه تست۱",
+            festival_format="news_report",
+            festival_topic="year_slogan",
+        )
+
+        self.registration2 = FestivalRegistration.objects.create(
+            user=self.user1,  # Same user, different registration
+            full_name="علی احمدی",
+            father_name="حسین",
+            national_id="1234567891",
+            gender="male",
+            education="کارشناسی ارشد",
+            phone_number="09123456789",
+            province=self.other_province,
+            city=self.other_city,
+            media_name="رسانه تست۲",
+            festival_format="interview",
+            festival_topic="jihad_explanation",
+        )
+
+        self.registration3 = FestivalRegistration.objects.create(
+            user=self.user2,
+            full_name="فاطمه حسینی",
+            father_name="محمد",
+            national_id="1234567892",
+            gender="female",
+            education="کارشناسی",
+            phone_number="09123456790",
+            province=self.province,
+            city=self.city,
+            media_name="رسانه تست۳",
+            festival_format="documentary",
+            festival_topic="family_society",
+        )
+
+    def test_my_registrations_list_unauthenticated(self):
+        """Test my registrations list access for unauthenticated users should be forbidden"""
+        url = reverse("festival:my-registrations-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_my_registrations_list_authenticated_success(self):
+        """Test successful my registrations list retrieval for authenticated user"""
+        self.client.force_authenticate(user=self.user1)
+        url = reverse("festival:my-registrations-list")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # User1 has 2 registrations
+
+        # Check that only user1's registrations are returned
+        registration_ids = [reg["id"] for reg in response.data]
+        self.assertIn(self.registration1.id, registration_ids)
+        self.assertIn(self.registration2.id, registration_ids)
+        self.assertNotIn(self.registration3.id, registration_ids)
+
+    def test_my_registrations_list_empty_for_user_with_no_registrations(self):
+        """Test my registrations list returns empty for user with no registrations"""
+        user_no_registrations = User.objects.create(
+            phone="09123456799", fullName="کاربر بدون ثبت نام"
+        )
+        self.client.force_authenticate(user=user_no_registrations)
+        url = reverse("festival:my-registrations-list")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_my_registrations_list_ordering(self):
+        """Test my registrations list ordering functionality"""
+        self.client.force_authenticate(user=self.user1)
+        url = reverse("festival:my-registrations-list")
+
+        # Test default ordering (by -created_at)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]["id"], self.registration2.id)  # More recent
+
+        # Test ordering by media_name
+        response = self.client.get(url + "?ordering=media_name")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data[0]["media_name"], "رسانه تست۱"
+        )  # Alphabetically first
+
+    def test_my_registrations_list_filtering(self):
+        """Test my registrations list filtering functionality"""
+        self.client.force_authenticate(user=self.user1)
+        url = reverse("festival:my-registrations-list")
+
+        # Filter by festival_format
+        response = self.client.get(url + "?festival_format=news_report")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.registration1.id)
+
+        # Filter by festival_format (interview is a format, not topic)
+        response = self.client.get(url + "?festival_format=interview")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.registration2.id)
+
+    def test_my_registrations_list_search(self):
+        """Test my registrations list search functionality"""
+        self.client.force_authenticate(user=self.user1)
+        url = reverse("festival:my-registrations-list")
+
+        # Search by media_name
+        response = self.client.get(url + "?search=رسانه تست۱")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.registration1.id)
+
+        # Search by full_name
+        response = self.client.get(url + "?search=علی")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Both registrations match
+
+    def test_my_registration_detail_unauthenticated(self):
+        """Test my registration detail access for unauthenticated users should be forbidden"""
+        url = reverse(
+            "festival:my-registration-detail", kwargs={"id": self.registration1.id}
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_my_registration_detail_authenticated_success(self):
+        """Test successful my registration detail retrieval for authenticated user"""
+        self.client.force_authenticate(user=self.user1)
+        url = reverse(
+            "festival:my-registration-detail", kwargs={"id": self.registration1.id}
+        )
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.registration1.id)
+        self.assertEqual(response.data["full_name"], self.registration1.full_name)
+        self.assertEqual(response.data["media_name"], self.registration1.media_name)
+
+        # Check that province and city information is included
+        self.assertIn("province", response.data)
+        self.assertIn("city", response.data)
+        self.assertEqual(response.data["province"]["name"], self.province.name)
+        self.assertEqual(response.data["city"]["name"], self.city.name)
+
+    def test_my_registration_detail_other_user_registration(self):
+        """Test that users cannot access other users' registration details"""
+        self.client.force_authenticate(user=self.user2)
+        url = reverse(
+            "festival:my-registration-detail", kwargs={"id": self.registration1.id}
+        )
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_my_registration_detail_nonexistent(self):
+        """Test my registration detail with nonexistent registration ID"""
+        self.client.force_authenticate(user=self.user1)
+        url = reverse("festival:my-registration-detail", kwargs={"id": 99999})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_my_registration_detail_includes_all_fields(self):
+        """Test that my registration detail includes all expected fields"""
+        self.client.force_authenticate(user=self.user1)
+        url = reverse(
+            "festival:my-registration-detail", kwargs={"id": self.registration1.id}
+        )
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_fields = [
+            "id",
+            "full_name",
+            "father_name",
+            "national_id",
+            "gender",
+            "education",
+            "phone_number",
+            "virtual_number",
+            "province",
+            "city",
+            "media_name",
+            "festival_format",
+            "festival_topic",
+            "special_section",
+            "created_at",
+            "updated_at",
+        ]
+
+        for field in expected_fields:
+            self.assertIn(field, response.data)
+
+
 class WorkAPITest(APITestCase):
     """Test cases for Work API endpoints"""
 
