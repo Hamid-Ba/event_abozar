@@ -7,6 +7,8 @@ from .festival_registration import (
     CityListView,
     MyFestivalRegistrationListView,
     MyFestivalRegistrationDetailView,
+    StatisticsView,
+    MyStatisticsView,
 )
 
 from .work import (
@@ -27,4 +29,6 @@ __all__ = [
     "UserFestivalRegistrationsView",
     "MyFestivalRegistrationListView",
     "MyFestivalRegistrationDetailView",
+    "StatisticsView",
+    "MyStatisticsView",
 ]

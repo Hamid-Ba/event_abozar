@@ -3,17 +3,21 @@ Festival Registration Views
 """
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from festival.models import FestivalRegistration
+from festival.models import FestivalRegistration, Work
+from content.models import Event, Education, News
 from festival.serializers import (
     FestivalRegistrationSerializer,
     FestivalRegistrationCreateSerializer,
     FestivalRegistrationListSerializer,
     MyFestivalRegistrationListSerializer,
     MyFestivalRegistrationDetailSerializer,
+    StatisticsSerializer,
+    MyStatisticsSerializer,
 )
 from province.models import Province, City
 from province.serializers import ProvinceSerializer, CitySerializer
@@ -287,3 +291,79 @@ class MyFestivalRegistrationDetailView(generics.RetrieveAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class StatisticsView(APIView):
+    """Statistics API endpoint for festival, works, and content counts"""
+
+    permission_classes = [permissions.AllowAny]
+
+    @extend_schema(
+        summary="آمار کلی سیستم",
+        description="دریافت آمار کلی شامل تعداد کاربران ثبت نام شده در جشنواره، تعداد کل اثار ارسالی، و تعداد کل محتوا (اخبار، رویدادها، آموزش‌ها).",
+        tags=["Statistics"],
+        responses={200: StatisticsSerializer},
+    )
+    def get(self, request, *args, **kwargs):
+        """Get system statistics"""
+
+        # Count registered users in festival
+        registered_users_count = FestivalRegistration.objects.count()
+
+        # Count total works
+        total_works_count = Work.objects.count()
+
+        # Count all content (events, education, news)
+        events_count = Event.objects.count()
+        education_count = Education.objects.count()
+        news_count = News.objects.count()
+        content_count = events_count + education_count + news_count
+
+        data = {
+            "registered_users_count": registered_users_count,
+            "total_works_count": total_works_count,
+            "content_count": content_count,
+        }
+
+        serializer = StatisticsSerializer(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MyStatisticsView(APIView):
+    """Authenticated user statistics API endpoint"""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary="آمار شخصی من",
+        description="دریافت آمار شخصی کاربر احراز هویت شده شامل تعداد ثبت‌نام‌های شخصی، تعداد آثار ارسالی شخصی، و تعداد کل محتوای سیستم.",
+        tags=["My Statistics"],
+        responses={200: MyStatisticsSerializer},
+    )
+    def get(self, request, *args, **kwargs):
+        """Get authenticated user's personal statistics"""
+
+        # Count user's festival registrations
+        my_registrations_count = FestivalRegistration.objects.filter(
+            user=request.user
+        ).count()
+
+        # Count user's works
+        my_works_count = Work.objects.filter(
+            festival_registration__user=request.user
+        ).count()
+
+        # Count total content (events, education, news) - same as global statistics
+        events_count = Event.objects.count()
+        education_count = Education.objects.count()
+        news_count = News.objects.count()
+        total_content_count = events_count + education_count + news_count
+
+        data = {
+            "my_registrations_count": my_registrations_count,
+            "my_works_count": my_works_count,
+            "total_content_count": total_content_count,
+        }
+
+        serializer = MyStatisticsSerializer(data)
+        return Response(serializer.data, status=status.HTTP_200_OK)

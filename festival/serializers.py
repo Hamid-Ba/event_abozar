@@ -406,3 +406,27 @@ class WorkCreateSerializer(serializers.ModelSerializer):
             )
 
         return value
+
+
+class StatisticsSerializer(serializers.Serializer):
+    """Serializer for statistics API response"""
+
+    registered_users_count = serializers.IntegerField(
+        help_text="تعداد کاربران ثبت نام شده در جشنواره"
+    )
+    total_works_count = serializers.IntegerField(help_text="تعداد کل اثار ارسالی")
+    content_count = serializers.IntegerField(
+        help_text="تعداد کل محتوا (اخبار، رویدادها، آموزش‌ها)"
+    )
+
+
+class MyStatisticsSerializer(serializers.Serializer):
+    """Serializer for authenticated user statistics API response"""
+
+    my_registrations_count = serializers.IntegerField(
+        help_text="تعداد ثبت‌نام‌های من در جشنواره"
+    )
+    my_works_count = serializers.IntegerField(help_text="تعداد آثار ارسالی من")
+    total_content_count = serializers.IntegerField(
+        help_text="تعداد کل محتوا (اخبار، رویدادها، آموزش‌ها)"
+    )

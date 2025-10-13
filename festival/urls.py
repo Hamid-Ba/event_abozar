@@ -14,6 +14,8 @@ from festival.views import (
     UserFestivalRegistrationsView,
     MyFestivalRegistrationListView,
     MyFestivalRegistrationDetailView,
+    StatisticsView,
+    MyStatisticsView,
 )
 
 app_name = "festival"
@@ -62,5 +64,16 @@ urlpatterns = [
         "my-registrations-detail/<int:id>/",
         MyFestivalRegistrationDetailView.as_view(),
         name="my-registration-detail",
+    ),
+    # Statistics endpoints
+    path(
+        "statistics/",
+        StatisticsView.as_view(),
+        name="statistics",
+    ),
+    path(
+        "my-statistics/",
+        MyStatisticsView.as_view(),
+        name="my-statistics",
     ),
 ]
