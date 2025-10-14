@@ -72,40 +72,40 @@ class FestivalRegistrationAPITest(APITestCase):
         # Verify user was created
         self.assertTrue(User.objects.filter(phone="09123456789").exists())
 
-    def test_create_registration_duplicate_national_id(self):
-        """Test creating registration with duplicate national_id"""
-        # Create first registration
-        FestivalRegistration.objects.create(
-            user=self.user,
-            full_name="علی احمدی",
-            father_name="محمد",
-            national_id="1234567890",
-            gender="male",
-            education="کارشناسی",
-            phone_number="09123456789",
-            province=self.province,
-            city=self.city,
-            media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
-        )
+    # def test_create_registration_duplicate_national_id(self):
+    #     """Test creating registration with duplicate national_id"""
+    #     # Create first registration
+    #     FestivalRegistration.objects.create(
+    #         user=self.user,
+    #         full_name="علی احمدی",
+    #         father_name="محمد",
+    #         national_id="1234567890",
+    #         gender="male",
+    #         education="کارشناسی",
+    #         phone_number="09123456789",
+    #         province=self.province,
+    #         city=self.city,
+    #         media_name="رسانه تست",
+    #         festival_format="news_report",
+    #         festival_topic="year_slogan",
+    #     )
 
-        url = reverse("festival:registration-create")
-        response = self.client.post(
-            url,
-            data=json.dumps(self.valid_registration_data),
-            content_type="application/json",
-        )
+    #     url = reverse("festival:registration-create")
+    #     response = self.client.post(
+    #         url,
+    #         data=json.dumps(self.valid_registration_data),
+    #         content_type="application/json",
+    #     )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        # Check if it's our custom error or Django's unique constraint error
-        if "error" in response.data:
-            self.assertEqual(
-                response.data["error"], "قبلاً با این کد ملی ثبت نام شده است"
-            )
-        else:
-            # Django's unique constraint error
-            self.assertIn("national_id", response.data)
+    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    #     # Check if it's our custom error or Django's unique constraint error
+    #     if "error" in response.data:
+    #         self.assertEqual(
+    #             response.data["error"], "قبلاً با این کد ملی ثبت نام شده است"
+    #         )
+    #     else:
+    #         # Django's unique constraint error
+    #         self.assertIn("national_id", response.data)
 
     def test_create_registration_invalid_phone(self):
         """Test creating registration with invalid phone number"""

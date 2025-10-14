@@ -60,7 +60,7 @@ class FestivalRegistration(models.Model):
     # Personal Information
     full_name = models.CharField(max_length=255, verbose_name="نام و نام خانوادگی")
     father_name = models.CharField(max_length=100, verbose_name="نام پدر")
-    national_id = models.CharField(max_length=10, unique=True, verbose_name="کد ملی")
+    national_id = models.CharField(max_length=10, verbose_name="کد ملی")
     gender = models.CharField(
         max_length=10, choices=GENDER_CHOICES, verbose_name="جنسیت"
     )

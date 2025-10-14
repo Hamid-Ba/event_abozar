@@ -40,11 +40,11 @@ class FestivalRegistrationCreateView(generics.CreateAPIView):
 
         # Check if registration with this national_id already exists
         national_id = serializer.validated_data.get("national_id")
-        if FestivalRegistration.objects.filter(national_id=national_id).exists():
-            return Response(
-                {"error": "قبلاً با این کد ملی ثبت نام شده است"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # if FestivalRegistration.objects.filter(national_id=national_id).exists():
+        #     return Response(
+        #         {"error": "قبلاً با این کد ملی ثبت نام شده است"},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
 
         registration = serializer.save()
         response_serializer = FestivalRegistrationSerializer(registration)
