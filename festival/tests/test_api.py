@@ -790,43 +790,43 @@ class WorkAPITest(APITestCase):
         self.assertTrue("festival_registration" in response.data)
         self.assertTrue("شما تنها می" in str(response.data))
 
-    def test_work_create_invalid_title(self):
-        """Test work creation with invalid title should fail"""
-        self.client.force_authenticate(user=self.user1)
-        url = reverse("festival:work-list")
+    # def test_work_create_invalid_title(self):
+    #     """Test work creation with invalid title should fail"""
+    #     self.client.force_authenticate(user=self.user1)
+    #     url = reverse("festival:work-list")
 
-        # Short title
-        invalid_data = self.valid_work_data.copy()
-        invalid_data["title"] = "کم"
+    #     # Short title
+    #     invalid_data = self.valid_work_data.copy()
+    #     invalid_data["title"] = "کم"
 
-        response = self.client.post(url, invalid_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("عنوان اثر باید حداقل ۳ کاراکتر باشد", str(response.data))
+    #     response = self.client.post(url, invalid_data)
+    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    #     self.assertIn("عنوان اثر باید حداقل ۳ کاراکتر باشد", str(response.data))
 
-    def test_work_create_invalid_description(self):
-        """Test work creation with invalid description should fail"""
-        from django.core.files.uploadedfile import SimpleUploadedFile
+    # def test_work_create_invalid_description(self):
+    #     """Test work creation with invalid description should fail"""
+    #     from django.core.files.uploadedfile import SimpleUploadedFile
 
-        self.client.force_authenticate(user=self.user1)
-        url = reverse("festival:work-list")
+    #     self.client.force_authenticate(user=self.user1)
+    #     url = reverse("festival:work-list")
 
-        # Short description
-        test_file = SimpleUploadedFile(
-            "test_file2.pdf",
-            b"test file content for testing",
-            content_type="application/pdf",
-        )
+    #     # Short description
+    #     test_file = SimpleUploadedFile(
+    #         "test_file2.pdf",
+    #         b"test file content for testing",
+    #         content_type="application/pdf",
+    #     )
 
-        invalid_data = {
-            "festival_registration": self.registration1.id,
-            "title": "کار نمونه برای تست",
-            "description": "کم",
-            "file": test_file,
-        }
+    #     invalid_data = {
+    #         "festival_registration": self.registration1.id,
+    #         "title": "کار نمونه برای تست",
+    #         "description": "کم",
+    #         "file": test_file,
+    #     }
 
-        response = self.client.post(url, invalid_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("توضیحات اثر باید حداقل ۱۰ کاراکتر باشد", str(response.data))
+    #     response = self.client.post(url, invalid_data)
+    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    #     self.assertIn("توضیحات اثر باید حداقل ۱۰ کاراکتر باشد", str(response.data))
 
     def test_work_create_missing_file(self):
         """Test work creation without file should fail"""

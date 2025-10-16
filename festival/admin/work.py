@@ -209,13 +209,20 @@ class WorkAdmin(admin.ModelAdmin):
 
     def display_created_date(self, obj):
         """نمایش تاریخ ایجاد"""
-        from django_jalali import datetime2jalali
+        try:
+            import jdatetime
 
-        jalali_date = datetime2jalali(obj.created_at)
-        return format_html(
-            '<span dir="ltr" style="font-family: monospace;">{}</span>',
-            jalali_date.strftime("%Y/%m/%d - %H:%M"),
-        )
+            jalali_date = jdatetime.datetime.fromgregorian(datetime=obj.created_at)
+            return format_html(
+                '<span dir="ltr" style="font-family: monospace;">{}</span>',
+                jalali_date.strftime("%Y/%m/%d - %H:%M"),
+            )
+        except ImportError:
+            # Fallback to regular datetime if jdatetime is not available
+            return format_html(
+                '<span dir="ltr" style="font-family: monospace;">{}</span>',
+                obj.created_at.strftime("%Y/%m/%d - %H:%M"),
+            )
 
     display_created_date.short_description = "تاریخ ایجاد"
     display_created_date.admin_order_field = "created_at"
