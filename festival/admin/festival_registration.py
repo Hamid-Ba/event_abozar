@@ -294,16 +294,16 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
 
     # Actions
-    actions = ["export_to_excel", "mark_as_special"]
+    actions = ["mark_as_special"]
 
-    def export_to_excel(self, request, queryset):
-        """خروجی اکسل"""
-        # TODO: Implement Excel export functionality
-        self.message_user(
-            request, f"{queryset.count()} رکورد انتخاب شد برای خروجی اکسل"
-        )
+    # def export_to_excel(self, request, queryset):
+    #     """خروجی اکسل"""
+    #     # TODO: Implement Excel export functionality
+    #     self.message_user(
+    #         request, f"{queryset.count()} رکورد انتخاب شد برای خروجی اکسل"
+    #     )
 
-    export_to_excel.short_description = "خروجی اکسل از موارد انتخابی"
+    # export_to_excel.short_description = "خروجی اکسل از موارد انتخابی"
 
     def mark_as_special(self, request, queryset):
         """علامت‌گذاری به عنوان بخش ویژه"""
