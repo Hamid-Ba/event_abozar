@@ -24,7 +24,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SITE_ID = 1
-SITE = {"front": {"protocol": "https", "url": "event_abozar.ir"}}
+SITE = {"front": {"protocol": "https", "url": "brisf.ir"}}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -282,8 +282,8 @@ KAVENEGAR_API_KEY = os.getenv("KAVENEGAR_API_KEY")
 
 MERCHANT_ID = os.getenv("MERCHANT_ID")
 
-VERIFY_URL = "https://api.event_abozar.ir/zarinpal/verify_transaction/"
-FRONT_VERIFY = "https://event_abozar.ir/payment/verify/"
+VERIFY_URL = "https://api.brisf.ir/zarinpal/verify_transaction/"
+FRONT_VERIFY = "https://brisf.ir/payment/verify/"
 
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
