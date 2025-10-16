@@ -230,7 +230,7 @@ class WorkAdmin(admin.ModelAdmin):
     def display_status(self, obj):
         """نمایش وضعیت کلی اثر"""
         has_file = bool(obj.file)
-        has_description = bool(obj.description and len(obj.description.strip()) > 10)
+        has_description = bool(obj.description and len(obj.description.strip()) > 1)
 
         if has_file and has_description:
             status_text = "کامل"
