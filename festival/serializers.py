@@ -354,13 +354,13 @@ class WorkCreateSerializer(serializers.ModelSerializer):
 
     def validate_title(self, value):
         """Validate title"""
-        if len(value.strip()) < 3:
+        if len(value.strip()) < 1:
             raise serializers.ValidationError("عنوان اثر باید حداقل ۳ کاراکتر باشد.")
         return value.strip()
 
     def validate_description(self, value):
         """Validate description"""
-        if value and len(value.strip()) < 10:
+        if value and len(value.strip()) < 1:
             raise serializers.ValidationError("توضیحات اثر باید حداقل ۱۰ کاراکتر باشد.")
         return value.strip() if value else ""
 
