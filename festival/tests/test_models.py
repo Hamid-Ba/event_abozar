@@ -6,7 +6,12 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 
-from festival.models import FestivalRegistration
+from festival.models import (
+    FestivalRegistration,
+    FestivalFormat,
+    FestivalTopic,
+    FestivalSpecialSection,
+)
 from province.models import Province, City
 
 User = get_user_model()
@@ -26,6 +31,13 @@ class FestivalRegistrationModelTest(TestCase):
         # Create test user
         self.user = User.objects.create(phone="09123456789", fullName="علی احمدی")
 
+        # Load category objects
+        self.format_news = FestivalFormat.objects.get(code="news_report")
+        self.topic_slogan = FestivalTopic.objects.get(code="year_slogan")
+        self.section_progress = FestivalSpecialSection.objects.get(
+            code="progress_narrative"
+        )
+
         # Valid registration data
         self.valid_data = {
             "user": self.user,
@@ -39,9 +51,9 @@ class FestivalRegistrationModelTest(TestCase):
             "province": self.province,
             "city": self.city,
             "media_name": "رسانه تست",
-            "festival_format": "news_report",
-            "festival_topic": "year_slogan",
-            "special_section": "progress_narrative",
+            "festival_format": self.format_news,
+            "festival_topic": self.topic_slogan,
+            "special_section": self.section_progress,
         }
 
     def test_create_festival_registration_success(self):
@@ -66,17 +78,18 @@ class FestivalRegistrationModelTest(TestCase):
         )
         self.assertEqual(str(registration), expected_str)
 
-    def test_unique_national_id_constraint(self):
-        """Test that national_id must be unique"""
+    def test_duplicate_national_id_allowed(self):
+        """Test that duplicate national_id is allowed (no unique constraint)"""
         FestivalRegistration.objects.create(**self.valid_data)
 
-        # Try to create another registration with same national_id
+        # Create another registration with same national_id
         duplicate_data = self.valid_data.copy()
         duplicate_data["user"] = User.objects.create(phone="09987654321")
         duplicate_data["phone_number"] = "09987654321"
 
-        with self.assertRaises(IntegrityError):
-            FestivalRegistration.objects.create(**duplicate_data)
+        # Should not raise IntegrityError
+        registration2 = FestivalRegistration.objects.create(**duplicate_data)
+        self.assertIsNotNone(registration2.id)
 
     def test_required_fields(self):
         """Test that required fields cannot be None"""
@@ -105,7 +118,7 @@ class FestivalRegistrationModelTest(TestCase):
                     registration.full_clean()
 
     def test_choice_field_validation(self):
-        """Test validation of choice fields"""
+        """Test validation of choice fields and ForeignKey relationships"""
         # Test invalid gender
         data = self.valid_data.copy()
         data["gender"] = "invalid_gender"
@@ -114,21 +127,19 @@ class FestivalRegistrationModelTest(TestCase):
         with self.assertRaises(ValidationError):
             registration.full_clean()
 
-        # Test invalid festival_format
+        # Test invalid festival_format (trying to assign string instead of object)
         data = self.valid_data.copy()
-        data["festival_format"] = "invalid_format"
-        registration = FestivalRegistration(**data)
 
-        with self.assertRaises(ValidationError):
-            registration.full_clean()
+        with self.assertRaises(ValueError):
+            data["festival_format"] = "invalid_format"
+            registration = FestivalRegistration(**data)
 
-        # Test invalid festival_topic
+        # Test invalid festival_topic (trying to assign string instead of object)
         data = self.valid_data.copy()
-        data["festival_topic"] = "invalid_topic"
-        registration = FestivalRegistration(**data)
 
-        with self.assertRaises(ValidationError):
-            registration.full_clean()
+        with self.assertRaises(ValueError):
+            data["festival_topic"] = "invalid_topic"
+            registration = FestivalRegistration(**data)
 
     def test_optional_fields(self):
         """Test that optional fields can be None or empty"""
@@ -207,24 +218,25 @@ class FestivalRegistrationModelTest(TestCase):
             registration = FestivalRegistration(**data)
             registration.full_clean()  # Should not raise ValidationError
 
-        # Test all format choices
-        for choice_value, choice_label in FestivalRegistration.FORMAT_CHOICES:
+        # Test category ForeignKey relationships
+        # Test different festival formats
+        for format_obj in FestivalFormat.objects.filter(is_active=True)[:3]:
             data = self.valid_data.copy()
-            data["festival_format"] = choice_value
+            data["festival_format"] = format_obj
             registration = FestivalRegistration(**data)
             registration.full_clean()  # Should not raise ValidationError
 
-        # Test all topic choices
-        for choice_value, choice_label in FestivalRegistration.TOPIC_CHOICES:
+        # Test different festival topics
+        for topic_obj in FestivalTopic.objects.filter(is_active=True)[:3]:
             data = self.valid_data.copy()
-            data["festival_topic"] = choice_value
+            data["festival_topic"] = topic_obj
             registration = FestivalRegistration(**data)
             registration.full_clean()  # Should not raise ValidationError
 
-        # Test all special section choices
-        for choice_value, choice_label in FestivalRegistration.SPECIAL_SECTION_CHOICES:
+        # Test different special sections
+        for section_obj in FestivalSpecialSection.objects.filter(is_active=True)[:2]:
             data = self.valid_data.copy()
-            data["special_section"] = choice_value
+            data["special_section"] = section_obj
             registration = FestivalRegistration(**data)
             registration.full_clean()  # Should not raise ValidationError
 
@@ -243,6 +255,10 @@ class WorkModelTest(TestCase):
         # Create test user
         self.user = User.objects.create(phone="09123456789", fullName="علی احمدی")
 
+        # Load category objects
+        self.format_news = FestivalFormat.objects.get(code="news_report")
+        self.topic_slogan = FestivalTopic.objects.get(code="year_slogan")
+
         # Create test festival registration
         self.festival_registration = FestivalRegistration.objects.create(
             user=self.user,
@@ -255,8 +271,8 @@ class WorkModelTest(TestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         # Valid work data

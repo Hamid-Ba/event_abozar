@@ -8,7 +8,13 @@ from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from festival.models import FestivalRegistration, Work
+from festival.models import (
+    FestivalRegistration,
+    FestivalFormat,
+    FestivalTopic,
+    FestivalSpecialSection,
+    Work,
+)
 from content.models import Event, Education, News
 from province.models import Province, City
 
@@ -26,6 +32,13 @@ class AuthenticatedUserStatisticsAPITest(APITestCase):
             name="تهران", slug="tehran-city", province=self.province
         )
 
+        # Load category objects
+        self.format_news = FestivalFormat.objects.get(code="news_report")
+        self.format_interview = FestivalFormat.objects.get(code="interview")
+        self.format_doc = FestivalFormat.objects.get(code="documentary")
+        self.topic_slogan = FestivalTopic.objects.get(code="year_slogan")
+        self.topic_jihad = FestivalTopic.objects.get(code="jihad_explanation")
+
         # Create test users
         self.user1 = User.objects.create(phone="09123456789", fullName="علی احمدی")
         self.user2 = User.objects.create(phone="09123456790", fullName="فاطمه حسینی")
@@ -42,8 +55,8 @@ class AuthenticatedUserStatisticsAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست۱",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         self.registration2 = FestivalRegistration.objects.create(
@@ -57,8 +70,8 @@ class AuthenticatedUserStatisticsAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست۲",
-            festival_format="interview",
-            festival_topic="jihad_explanation",
+            festival_format=self.format_interview,
+            festival_topic=self.topic_jihad,
         )
 
         # Create festival registration for user2
@@ -73,8 +86,8 @@ class AuthenticatedUserStatisticsAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست۳",
-            festival_format="documentary",
-            festival_topic="family_society",
+            festival_format=self.format_doc,
+            festival_topic=FestivalTopic.objects.get(code="family_society"),
         )
 
         # Create some works for user1
@@ -238,8 +251,8 @@ class AuthenticatedUserStatisticsAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه جدید",
-            festival_format="photo",
-            festival_topic="hope_happiness",
+            festival_format=FestivalFormat.objects.get(code="photo"),
+            festival_topic=FestivalTopic.objects.get(code="hope_happiness"),
         )
 
         # Get updated count

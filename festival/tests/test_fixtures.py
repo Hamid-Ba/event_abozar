@@ -2,7 +2,12 @@
 Test Fixtures and Utilities for Festival Module
 """
 from django.contrib.auth import get_user_model
-from festival.models import FestivalRegistration
+from festival.models import (
+    FestivalRegistration,
+    FestivalFormat,
+    FestivalTopic,
+    FestivalSpecialSection,
+)
 from province.models import Province, City
 
 User = get_user_model()
@@ -35,47 +40,81 @@ TEST_USERS = [
     {"phone": "09111222333", "fullName": "مریم کریمی"},
 ]
 
-TEST_REGISTRATIONS = [
-    {
-        "full_name": "علی احمدی",
-        "father_name": "محمد",
-        "national_id": "1234567890",
-        "gender": "male",
-        "education": "کارشناسی",
-        "phone_number": "09123456789",
-        "virtual_number": "@ali_ahmadi",
-        "media_name": "رسانه آزاد",
-        "festival_format": "news_report",
-        "festival_topic": "year_slogan",
-        "special_section": "progress_narrative",
-    },
-    {
-        "full_name": "فاطمه حسینی",
-        "father_name": "علی",
-        "national_id": "0987654321",
-        "gender": "female",
-        "education": "کارشناسی ارشد",
-        "phone_number": "09987654321",
-        "virtual_number": "@fatemeh_h",
-        "media_name": "رسانه ملی",
-        "festival_format": "interview",
-        "festival_topic": "media_industry",
-        "special_section": None,
-    },
-    {
-        "full_name": "محمد رضایی",
-        "father_name": "حسن",
-        "national_id": "1122334455",
-        "gender": "male",
-        "education": "دکتری",
-        "phone_number": "09555666777",
-        "virtual_number": "@mohammad_r",
-        "media_name": "رسانه جوان",
-        "festival_format": "documentary",
-        "festival_topic": "revolution_achievements",
-        "special_section": "field_narrative_12days",
-    },
-]
+# Category codes - these will be used to get the objects from migration data
+TEST_REGISTRATION_CATEGORY_CODES = {
+    "format_news_report": "news_report",
+    "format_interview": "interview",
+    "format_documentary": "documentary",
+    "topic_year_slogan": "year_slogan",
+    "topic_media_industry": "media_industry",
+    "topic_revolution": "revolution_achievements",
+    "section_progress": "progress_narrative",
+    "section_field": "field_narrative_12days",
+}
+
+
+def get_category_objects():
+    """Get or create category objects for tests"""
+    return {
+        "format_news_report": FestivalFormat.objects.get(code="news_report"),
+        "format_interview": FestivalFormat.objects.get(code="interview"),
+        "format_documentary": FestivalFormat.objects.get(code="documentary"),
+        "topic_year_slogan": FestivalTopic.objects.get(code="year_slogan"),
+        "topic_media_industry": FestivalTopic.objects.get(code="media_industry"),
+        "topic_revolution": FestivalTopic.objects.get(code="revolution_achievements"),
+        "section_progress": FestivalSpecialSection.objects.get(
+            code="progress_narrative"
+        ),
+        "section_field": FestivalSpecialSection.objects.get(
+            code="field_narrative_12days"
+        ),
+    }
+
+
+# Updated TEST_REGISTRATIONS - will use category objects
+def get_test_registration_data(categories):
+    """Get test registration data with proper category objects"""
+    return [
+        {
+            "full_name": "علی احمدی",
+            "father_name": "محمد",
+            "national_id": "1234567890",
+            "gender": "male",
+            "education": "کارشناسی",
+            "phone_number": "09123456789",
+            "virtual_number": "@ali_ahmadi",
+            "media_name": "رسانه آزاد",
+            "festival_format": categories["format_news_report"],
+            "festival_topic": categories["topic_year_slogan"],
+            "special_section": categories["section_progress"],
+        },
+        {
+            "full_name": "فاطمه حسینی",
+            "father_name": "علی",
+            "national_id": "0987654321",
+            "gender": "female",
+            "education": "کارشناسی ارشد",
+            "phone_number": "09987654321",
+            "virtual_number": "@fatemeh_h",
+            "media_name": "رسانه ملی",
+            "festival_format": categories["format_interview"],
+            "festival_topic": categories["topic_media_industry"],
+            "special_section": None,
+        },
+        {
+            "full_name": "محمد رضایی",
+            "father_name": "حسن",
+            "national_id": "1122334455",
+            "gender": "male",
+            "education": "دکتری",
+            "phone_number": "09555666777",
+            "virtual_number": "@mohammad_r",
+            "media_name": "رسانه جوان",
+            "festival_format": categories["format_documentary"],
+            "festival_topic": categories["topic_revolution"],
+            "special_section": categories["section_field"],
+        },
+    ]
 
 
 def create_test_provinces():
@@ -121,6 +160,8 @@ def create_test_registrations():
     provinces = create_test_provinces()
     cities = create_test_cities()
     users = create_test_users()
+    categories = get_category_objects()
+    test_registrations = get_test_registration_data(categories)
 
     # Map cities to their provinces for easy lookup
     tehran_province = Province.objects.get(slug="tehran")
@@ -132,7 +173,7 @@ def create_test_registrations():
     shiraz_city = City.objects.get(slug="shiraz")
 
     registrations = []
-    for i, registration_data in enumerate(TEST_REGISTRATIONS):
+    for i, registration_data in enumerate(test_registrations):
         user = users[i]
 
         # Assign provinces and cities
@@ -166,6 +207,7 @@ class FestivalTestMixin:
         self.provinces = create_test_provinces()
         self.cities = create_test_cities()
         self.users = create_test_users()
+        self.categories = get_category_objects()
 
         # Commonly used test objects
         self.test_province = self.provinces[0]  # Tehran
@@ -185,8 +227,8 @@ class FestivalTestMixin:
             "province": self.test_province,
             "city": self.test_city,
             "media_name": "رسانه تست",
-            "festival_format": "news_report",
-            "festival_topic": "year_slogan",
+            "festival_format": self.categories["format_news_report"],
+            "festival_topic": self.categories["topic_year_slogan"],
         }
         defaults.update(overrides)
         return FestivalRegistration.objects.create(**defaults)

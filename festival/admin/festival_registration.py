@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.db.models import Count
 from django.contrib.admin import SimpleListFilter
 
-from festival.models import FestivalRegistration
+from festival.models import FestivalRegistration, FestivalFormat, FestivalTopic
 from province.models import City
 
 
@@ -22,11 +22,15 @@ class FestivalFormatFilter(SimpleListFilter):
     parameter_name = "festival_format"
 
     def lookups(self, request, model_admin):
-        return FestivalRegistration.FORMAT_CHOICES
+        """بازگشت قالب‌های فعال از دیتابیس"""
+        return [
+            (fmt.id, fmt.name)
+            for fmt in FestivalFormat.objects.filter(is_active=True).order_by("name")
+        ]
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(festival_format=self.value())
+            return queryset.filter(festival_format_id=self.value())
         return queryset
 
 
@@ -37,11 +41,15 @@ class FestivalTopicFilter(SimpleListFilter):
     parameter_name = "festival_topic"
 
     def lookups(self, request, model_admin):
-        return FestivalRegistration.TOPIC_CHOICES
+        """بازگشت محورهای فعال از دیتابیس"""
+        return [
+            (topic.id, topic.name)
+            for topic in FestivalTopic.objects.filter(is_active=True).order_by("name")
+        ]
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(festival_topic=self.value())
+            return queryset.filter(festival_topic_id=self.value())
         return queryset
 
 
@@ -174,6 +182,10 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
 
     def display_festival_format(self, obj):
         """نمایش قالب جشنواره"""
+        if not obj.festival_format:
+            return "نامشخص"
+
+        # Map codes to colors (we can use the code field from the related object)
         format_colors = {
             "news_report": "#FF6B35",
             "interview": "#004E89",
@@ -186,25 +198,28 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
             "documentary": "#003566",
             "podcast": "#6A994E",
         }
-        color = format_colors.get(obj.festival_format, "#666666")
+        color = format_colors.get(obj.festival_format.code, "#666666")
         return format_html(
             '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px;">{}</span>',
             color,
-            obj.get_festival_format_display(),
+            obj.festival_format.name,
         )
 
     display_festival_format.short_description = "قالب"
-    display_festival_format.admin_order_field = "festival_format"
+    display_festival_format.admin_order_field = "festival_format__name"
 
     def display_festival_topic(self, obj):
         """نمایش محور جشنواره"""
+        if not obj.festival_topic:
+            return "نامشخص"
+
         return format_html(
             '<span style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">{}</span>',
-            obj.get_festival_topic_display(),
+            obj.festival_topic.name,
         )
 
     display_festival_topic.short_description = "محور"
-    display_festival_topic.admin_order_field = "festival_topic"
+    display_festival_topic.admin_order_field = "festival_topic__name"
 
     def display_province_city(self, obj):
         """نمایش استان و شهر"""
@@ -268,8 +283,8 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
                 """,
                 obj.full_name,
                 obj.phone_number,
-                obj.get_festival_format_display(),
-                obj.get_festival_topic_display(),
+                obj.festival_format.name if obj.festival_format else "نامشخص",
+                obj.festival_topic.name if obj.festival_topic else "نامشخص",
                 obj.province.name,
                 obj.city.name if obj.city else "نامشخص",
                 obj.created_at.strftime("%Y/%m/%d %H:%M"),
@@ -288,7 +303,14 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """بهینه‌سازی کوئری با select_related"""
         queryset = super().get_queryset(request)
-        return queryset.select_related("user", "province", "city")
+        return queryset.select_related(
+            "user",
+            "province",
+            "city",
+            "festival_format",
+            "festival_topic",
+            "special_section",
+        )
 
     ordering = ["-created_at"]
     date_hierarchy = "created_at"
@@ -353,16 +375,18 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
         """
         stats = {
             "total_registrations": FestivalRegistration.objects.count(),
-            "by_format": dict(
-                FestivalRegistration.objects.values_list("festival_format").annotate(
-                    count=Count("festival_format")
-                )
-            ),
-            "by_topic": dict(
-                FestivalRegistration.objects.values_list("festival_topic").annotate(
-                    count=Count("festival_topic")
-                )
-            ),
+            "by_format": {
+                fmt.name: count
+                for fmt, count in FestivalRegistration.objects.values_list(
+                    "festival_format__name"
+                ).annotate(count=Count("festival_format"))
+            },
+            "by_topic": {
+                topic.name: count
+                for topic, count in FestivalRegistration.objects.values_list(
+                    "festival_topic__name"
+                ).annotate(count=Count("festival_topic"))
+            },
             "by_gender": dict(
                 FestivalRegistration.objects.values_list("gender").annotate(
                     count=Count("gender")

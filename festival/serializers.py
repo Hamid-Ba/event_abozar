@@ -2,9 +2,39 @@
 Festival Registration Serializers
 """
 from rest_framework import serializers
-from festival.models import FestivalRegistration, Work
+from festival.models import (
+    FestivalRegistration,
+    Work,
+    FestivalFormat,
+    FestivalTopic,
+    FestivalSpecialSection,
+)
 from festival.services import create_festival_registration
 from province.serializers import ProvinceSerializer, CitySerializer
+
+
+class FestivalFormatSerializer(serializers.ModelSerializer):
+    """Festival Format Serializer"""
+
+    class Meta:
+        model = FestivalFormat
+        fields = ["id", "code", "name", "description"]
+
+
+class FestivalTopicSerializer(serializers.ModelSerializer):
+    """Festival Topic Serializer"""
+
+    class Meta:
+        model = FestivalTopic
+        fields = ["id", "code", "name", "description"]
+
+
+class FestivalSpecialSectionSerializer(serializers.ModelSerializer):
+    """Festival Special Section Serializer"""
+
+    class Meta:
+        model = FestivalSpecialSection
+        fields = ["id", "code", "name", "description"]
 
 
 class FestivalRegistrationSerializer(serializers.ModelSerializer):
@@ -12,6 +42,9 @@ class FestivalRegistrationSerializer(serializers.ModelSerializer):
 
     province = ProvinceSerializer(read_only=True)
     city = CitySerializer(read_only=True)
+    festival_format = FestivalFormatSerializer(read_only=True)
+    festival_topic = FestivalTopicSerializer(read_only=True)
+    special_section = FestivalSpecialSectionSerializer(read_only=True)
 
     class Meta:
         model = FestivalRegistration
@@ -64,6 +97,20 @@ class FestivalRegistrationCreateSerializer(serializers.ModelSerializer):
 
     province_id = serializers.IntegerField(write_only=True)
     city_id = serializers.IntegerField(write_only=True)
+
+    # Accept code strings and convert to ForeignKey objects
+    festival_format = serializers.SlugRelatedField(
+        slug_field="code", queryset=FestivalFormat.objects.all()
+    )
+    festival_topic = serializers.SlugRelatedField(
+        slug_field="code", queryset=FestivalTopic.objects.all()
+    )
+    special_section = serializers.SlugRelatedField(
+        slug_field="code",
+        queryset=FestivalSpecialSection.objects.all(),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = FestivalRegistration
@@ -155,6 +202,9 @@ class FestivalRegistrationListSerializer(serializers.ModelSerializer):
     user_phone = serializers.CharField(source="user.phone", read_only=True)
     province_name = serializers.CharField(source="province.name", read_only=True)
     city_name = serializers.CharField(source="city.name", read_only=True)
+    festival_format = FestivalFormatSerializer(read_only=True)
+    festival_topic = FestivalTopicSerializer(read_only=True)
+    special_section = FestivalSpecialSectionSerializer(read_only=True)
 
     class Meta:
         model = FestivalRegistration
@@ -164,6 +214,7 @@ class FestivalRegistrationListSerializer(serializers.ModelSerializer):
             "media_name",
             "festival_format",
             "festival_topic",
+            "special_section",
             "province_name",
             "city_name",
             "user_phone",
@@ -176,6 +227,9 @@ class MyFestivalRegistrationListSerializer(serializers.ModelSerializer):
 
     province = ProvinceSerializer(read_only=True)
     city = CitySerializer(read_only=True)
+    festival_format = FestivalFormatSerializer(read_only=True)
+    festival_topic = FestivalTopicSerializer(read_only=True)
+    special_section = FestivalSpecialSectionSerializer(read_only=True)
 
     class Meta:
         model = FestivalRegistration
@@ -200,6 +254,9 @@ class MyFestivalRegistrationDetailSerializer(serializers.ModelSerializer):
 
     province = ProvinceSerializer(read_only=True)
     city = CitySerializer(read_only=True)
+    festival_format = FestivalFormatSerializer(read_only=True)
+    festival_topic = FestivalTopicSerializer(read_only=True)
+    special_section = FestivalSpecialSectionSerializer(read_only=True)
 
     class Meta:
         model = FestivalRegistration
@@ -234,10 +291,10 @@ class WorkListSerializer(serializers.ModelSerializer):
         source="festival_registration.media_name", read_only=True
     )
     festival_format = serializers.CharField(
-        source="festival_registration.get_festival_format_display", read_only=True
+        source="festival_registration.festival_format.name", read_only=True
     )
     festival_topic = serializers.CharField(
-        source="festival_registration.get_festival_topic_display", read_only=True
+        source="festival_registration.festival_topic.name", read_only=True
     )
     file_url = serializers.SerializerMethodField()
 

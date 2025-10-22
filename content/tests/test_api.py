@@ -171,6 +171,143 @@ class EducationAPITest(BaseContentAPITestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0]["title"], "آموزش دوم")
 
+    def test_education_list_includes_media_fields(self):
+        """Test that education list includes video and document fields"""
+        url = reverse("content:education-list")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        first_item = response.data["results"][0]
+
+        # Check that media fields are present
+        self.assertIn("has_video", first_item)
+        self.assertIn("has_document", first_item)
+        self.assertIn("video_url", first_item)
+        self.assertIn("document_url", first_item)
+
+        # Initially should be False/None
+        self.assertFalse(first_item["has_video"])
+        self.assertFalse(first_item["has_document"])
+        self.assertIsNone(first_item["video_url"])
+        self.assertIsNone(first_item["document_url"])
+
+    def test_education_detail_includes_media_fields(self):
+        """Test that education detail includes video and document fields"""
+        url = reverse("content:education-detail", kwargs={"pk": self.education1.pk})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check that media fields are present
+        self.assertIn("video", response.data)
+        self.assertIn("document", response.data)
+
+    def test_education_with_video_file(self):
+        """Test education with uploaded video file"""
+        # Create education with video
+        mock_video = SimpleUploadedFile(
+            "tutorial.mp4", b"fake video content", content_type="video/mp4"
+        )
+
+        education = Education.objects.create(
+            title="آموزش ویدیویی",
+            description="آموزش با ویدیو",
+            publish_date=timezone.now().date(),
+            video=mock_video,
+        )
+
+        # Test list endpoint
+        url = reverse("content:education-list")
+        response = self.client.get(url)
+
+        # Find our education in results
+        edu_data = next(
+            (item for item in response.data["results"] if item["id"] == education.id),
+            None,
+        )
+
+        self.assertIsNotNone(edu_data)
+        self.assertTrue(edu_data["has_video"])
+        self.assertIsNotNone(edu_data["video_url"])
+        # Check URL contains the correct extension (filename is random UUID)
+        self.assertTrue(edu_data["video_url"].endswith(".mp4"))
+
+        # Test detail endpoint
+        detail_url = reverse("content:education-detail", kwargs={"pk": education.pk})
+        detail_response = self.client.get(detail_url)
+
+        self.assertIsNotNone(detail_response.data["video"])
+
+    def test_education_with_document_file(self):
+        """Test education with uploaded document file"""
+        # Create education with document
+        mock_document = SimpleUploadedFile(
+            "slides.pdf", b"fake pdf content", content_type="application/pdf"
+        )
+
+        education = Education.objects.create(
+            title="آموزش با اسناد",
+            description="آموزش با فایل PDF",
+            publish_date=timezone.now().date(),
+            document=mock_document,
+        )
+
+        # Test list endpoint
+        url = reverse("content:education-list")
+        response = self.client.get(url)
+
+        # Find our education in results
+        edu_data = next(
+            (item for item in response.data["results"] if item["id"] == education.id),
+            None,
+        )
+
+        self.assertIsNotNone(edu_data)
+        self.assertTrue(edu_data["has_document"])
+        self.assertIsNotNone(edu_data["document_url"])
+        # Check URL contains the correct extension (filename is random UUID)
+        self.assertTrue(edu_data["document_url"].endswith(".pdf"))
+
+        # Test detail endpoint
+        detail_url = reverse("content:education-detail", kwargs={"pk": education.pk})
+        detail_response = self.client.get(detail_url)
+
+        self.assertIsNotNone(detail_response.data["document"])
+
+    def test_education_with_both_video_and_document(self):
+        """Test education with both video and document files"""
+        mock_video = SimpleUploadedFile(
+            "course.mp4", b"fake video content", content_type="video/mp4"
+        )
+        mock_document = SimpleUploadedFile(
+            "materials.pptx",
+            b"fake pptx content",
+            content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        )
+
+        education = Education.objects.create(
+            title="دوره کامل",
+            description="دوره با ویدیو و اسناد",
+            publish_date=timezone.now().date(),
+            video=mock_video,
+            document=mock_document,
+        )
+
+        # Test list endpoint
+        url = reverse("content:education-list")
+        response = self.client.get(url)
+
+        edu_data = next(
+            (item for item in response.data["results"] if item["id"] == education.id),
+            None,
+        )
+
+        self.assertIsNotNone(edu_data)
+        self.assertTrue(edu_data["has_video"])
+        self.assertTrue(edu_data["has_document"])
+        self.assertIsNotNone(edu_data["video_url"])
+        self.assertIsNotNone(edu_data["document_url"])
+
 
 class EventAPITest(BaseContentAPITestCase):
     """Test cases for Event API endpoints"""

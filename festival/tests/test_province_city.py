@@ -252,7 +252,12 @@ class ProvinceAndCityIntegrationTest(APITestCase):
 
     def test_registration_list_with_province_city_info(self):
         """Test that registration list includes province and city information"""
-        from festival.models import FestivalRegistration
+        from festival.models import (
+            FestivalRegistration,
+            FestivalFormat,
+            FestivalTopic,
+            FestivalSpecialSection,
+        )
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
@@ -270,8 +275,8 @@ class ProvinceAndCityIntegrationTest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=FestivalFormat.objects.get(code="news_report"),
+            festival_topic=FestivalTopic.objects.get(code="year_slogan"),
         )
 
         # Get registration list
@@ -290,7 +295,12 @@ class ProvinceAndCityIntegrationTest(APITestCase):
 
     def test_registration_detail_with_province_city_info(self):
         """Test that registration detail includes full province and city objects"""
-        from festival.models import FestivalRegistration
+        from festival.models import (
+            FestivalRegistration,
+            FestivalFormat,
+            FestivalTopic,
+            FestivalSpecialSection,
+        )
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
@@ -308,8 +318,8 @@ class ProvinceAndCityIntegrationTest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=FestivalFormat.objects.get(code="news_report"),
+            festival_topic=FestivalTopic.objects.get(code="year_slogan"),
         )
 
         # Get registration detail

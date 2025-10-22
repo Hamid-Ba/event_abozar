@@ -18,6 +18,12 @@ from .work import (
     WorkByFestivalView,
 )
 
+from .categories import (
+    FestivalFormatListView,
+    FestivalTopicListView,
+    FestivalSpecialSectionListView,
+)
+
 __all__ = [
     "FestivalRegistrationCreateView",
     "FestivalRegistrationListView",
@@ -33,4 +39,7 @@ __all__ = [
     "MyFestivalRegistrationDetailView",
     "StatisticsView",
     "MyStatisticsView",
+    "FestivalFormatListView",
+    "FestivalTopicListView",
+    "FestivalSpecialSectionListView",
 ]

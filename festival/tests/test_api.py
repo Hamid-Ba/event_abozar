@@ -8,7 +8,12 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework import status
 
-from festival.models import FestivalRegistration
+from festival.models import (
+    FestivalRegistration,
+    FestivalFormat,
+    FestivalTopic,
+    FestivalSpecialSection,
+)
 from province.models import Province, City
 
 User = get_user_model()
@@ -32,6 +37,16 @@ class FestivalRegistrationAPITest(APITestCase):
 
         # Create test user
         self.user = User.objects.create(phone="09123456789", fullName="علی احمدی")
+
+        # Load category objects
+        self.format_news = FestivalFormat.objects.get(code="news_report")
+        self.format_interview = FestivalFormat.objects.get(code="interview")
+        self.format_doc = FestivalFormat.objects.get(code="documentary")
+        self.topic_slogan = FestivalTopic.objects.get(code="year_slogan")
+        self.topic_jihad = FestivalTopic.objects.get(code="jihad_explanation")
+        self.section_progress = FestivalSpecialSection.objects.get(
+            code="progress_narrative"
+        )
 
         # Valid registration data
         self.valid_registration_data = {
@@ -86,8 +101,8 @@ class FestivalRegistrationAPITest(APITestCase):
     #         province=self.province,
     #         city=self.city,
     #         media_name="رسانه تست",
-    #         festival_format="news_report",
-    #         festival_topic="year_slogan",
+    #         festival_format=self.format_news,
+    #         festival_topic=self.topic_slogan,
     #     )
 
     #     url = reverse("festival:registration-create")
@@ -186,11 +201,12 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         user2 = User.objects.create(phone="09987654321")
+        topic_media = FestivalTopic.objects.get(code="media_industry")
         registration2 = FestivalRegistration.objects.create(
             user=user2,
             full_name="فاطمه حسینی",
@@ -202,8 +218,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.other_province,
             city=self.other_city,
             media_name="رسانه دیگر",
-            festival_format="interview",
-            festival_topic="media_industry",
+            festival_format=self.format_interview,
+            festival_topic=topic_media,
         )
 
         url = reverse("festival:registration-list")
@@ -226,8 +242,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         user2 = User.objects.create(phone="09987654321")
@@ -242,8 +258,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.other_province,
             city=self.other_city,
             media_name="رسانه دیگر",
-            festival_format="interview",
-            festival_topic="media_industry",
+            festival_format=self.format_interview,
+            festival_topic=FestivalTopic.objects.get(code="media_industry"),
         )
 
         # Test filter by gender
@@ -274,8 +290,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         url = reverse("festival:registration-list")
@@ -303,8 +319,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         url = reverse("festival:registration-detail", kwargs={"id": registration.id})
@@ -335,8 +351,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         url = reverse("festival:registration-search")
@@ -359,8 +375,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         url = reverse("festival:registration-search")
@@ -394,8 +410,8 @@ class FestivalRegistrationAPITest(APITestCase):
                 province=self.province,
                 city=self.city,
                 media_name=f"رسانه {i}",
-                festival_format="news_report",
-                festival_topic="year_slogan",
+                festival_format=self.format_news,
+                festival_topic=self.topic_slogan,
             )
 
         url = reverse("festival:registration-list")
@@ -419,8 +435,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         user2 = User.objects.create(phone="09987654321")
@@ -435,8 +451,8 @@ class FestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه دیگر",
-            festival_format="interview",
-            festival_topic="media_industry",
+            festival_format=self.format_interview,
+            festival_topic=FestivalTopic.objects.get(code="media_industry"),
         )
 
         url = reverse("festival:registration-list")
@@ -470,6 +486,19 @@ class AuthenticatedFestivalRegistrationAPITest(APITestCase):
             name="اصفهان", slug="isfahan-city", province=self.other_province
         )
 
+        # Load category objects
+        self.format_news = FestivalFormat.objects.get(code="news_report")
+        self.format_interview = FestivalFormat.objects.get(code="interview")
+        self.format_doc = FestivalFormat.objects.get(code="documentary")
+        self.topic_slogan = FestivalTopic.objects.get(code="year_slogan")
+        self.topic_jihad = FestivalTopic.objects.get(code="jihad_explanation")
+        self.section_progress = FestivalSpecialSection.objects.get(
+            code="progress_narrative"
+        )
+        self.section_field = FestivalSpecialSection.objects.get(
+            code="field_narrative_12days"
+        )
+
         # Create test users
         self.user1 = User.objects.create(phone="09123456789", fullName="علی احمدی")
         self.user2 = User.objects.create(phone="09123456790", fullName="فاطمه حسینی")
@@ -486,8 +515,8 @@ class AuthenticatedFestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست۱",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         self.registration2 = FestivalRegistration.objects.create(
@@ -501,8 +530,8 @@ class AuthenticatedFestivalRegistrationAPITest(APITestCase):
             province=self.other_province,
             city=self.other_city,
             media_name="رسانه تست۲",
-            festival_format="interview",
-            festival_topic="jihad_explanation",
+            festival_format=self.format_interview,
+            festival_topic=self.topic_jihad,
         )
 
         self.registration3 = FestivalRegistration.objects.create(
@@ -516,8 +545,8 @@ class AuthenticatedFestivalRegistrationAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست۳",
-            festival_format="documentary",
-            festival_topic="family_society",
+            festival_format=self.format_doc,
+            festival_topic=FestivalTopic.objects.get(code="family_society"),
         )
 
     def test_my_registrations_list_unauthenticated(self):
@@ -692,6 +721,12 @@ class WorkAPITest(APITestCase):
             name="تهران", slug="tehran-city", province=self.province
         )
 
+        # Load category objects
+        self.format_news = FestivalFormat.objects.get(code="news_report")
+        self.format_interview = FestivalFormat.objects.get(code="interview")
+        self.topic_slogan = FestivalTopic.objects.get(code="year_slogan")
+        self.topic_jihad = FestivalTopic.objects.get(code="jihad_explanation")
+
         # Create test users
         self.user1 = User.objects.create(phone="09123456789", fullName="علی احمدی")
         self.user2 = User.objects.create(phone="09123456790", fullName="فاطمه حسینی")
@@ -708,8 +743,8 @@ class WorkAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست۱",
-            festival_format="news_report",
-            festival_topic="year_slogan",
+            festival_format=self.format_news,
+            festival_topic=self.topic_slogan,
         )
 
         self.registration2 = FestivalRegistration.objects.create(
@@ -723,8 +758,8 @@ class WorkAPITest(APITestCase):
             province=self.province,
             city=self.city,
             media_name="رسانه تست۲",
-            festival_format="interview",
-            festival_topic="jihad_explanation",
+            festival_format=self.format_interview,
+            festival_topic=self.topic_jihad,
         )
 
         # Valid work data with file

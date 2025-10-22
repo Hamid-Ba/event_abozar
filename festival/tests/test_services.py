@@ -6,7 +6,12 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
 from festival.services import create_festival_registration
-from festival.models import FestivalRegistration
+from festival.models import (
+    FestivalRegistration,
+    FestivalFormat,
+    FestivalTopic,
+    FestivalSpecialSection,
+)
 from province.models import Province, City
 
 User = get_user_model()
@@ -23,6 +28,13 @@ class FestivalServicesTest(TestCase):
             name="تهران", slug="tehran-city", province=self.province
         )
 
+        # Load category objects
+        self.format_news = FestivalFormat.objects.get(code="news_report")
+        self.topic_slogan = FestivalTopic.objects.get(code="year_slogan")
+        self.section_progress = FestivalSpecialSection.objects.get(
+            code="progress_narrative"
+        )
+
         # Valid registration data
         self.valid_registration_data = {
             "full_name": "علی احمدی",
@@ -35,9 +47,9 @@ class FestivalServicesTest(TestCase):
             "province": self.province,
             "city": self.city,
             "media_name": "رسانه تست",
-            "festival_format": "news_report",
-            "festival_topic": "year_slogan",
-            "special_section": "progress_narrative",
+            "festival_format": self.format_news,
+            "festival_topic": self.topic_slogan,
+            "special_section": self.section_progress,
         }
 
     def test_create_festival_registration_new_user(self):
@@ -118,8 +130,7 @@ class FestivalServicesTest(TestCase):
         """Test that transaction rolls back on error"""
         phone_number = "09123456789"
 
-        # Create invalid data that will cause an IntegrityError (duplicate national_id)
-        # First create a registration
+        # Create valid first registration
         create_festival_registration(
             phone_number="09111111111", registration_data=self.valid_registration_data
         )
@@ -128,23 +139,25 @@ class FestivalServicesTest(TestCase):
         initial_user_count = User.objects.count()
         initial_registration_count = FestivalRegistration.objects.count()
 
-        # Try to create another with same national_id (should fail)
-        duplicate_data = self.valid_registration_data.copy()
-        duplicate_data["phone_number"] = phone_number
+        # Create data with invalid province_id to trigger an error
+        invalid_data = self.valid_registration_data.copy()
+        invalid_data["phone_number"] = phone_number
+        invalid_data["province"] = None  # This should cause an error
 
-        with self.assertRaises(IntegrityError):
+        # Should raise an error due to None province
+        with self.assertRaises(Exception):
             create_festival_registration(
-                phone_number=phone_number, registration_data=duplicate_data
+                phone_number=phone_number, registration_data=invalid_data
             )
 
-        # Check that no additional user was created due to rollback
+        # Check that no additional user or registration was created due to rollback
         self.assertEqual(User.objects.count(), initial_user_count)
         self.assertEqual(
             FestivalRegistration.objects.count(), initial_registration_count
         )
 
     def test_create_festival_registration_with_duplicate_national_id(self):
-        """Test handling duplicate national_id"""
+        """Test handling duplicate national_id - should be allowed"""
         phone_number1 = "09123456789"
         phone_number2 = "09987654321"
 
@@ -153,14 +166,17 @@ class FestivalServicesTest(TestCase):
             phone_number=phone_number1, registration_data=self.valid_registration_data
         )
 
-        # Try to create second registration with same national_id but different phone
+        # Create second registration with same national_id but different phone
         duplicate_data = self.valid_registration_data.copy()
         duplicate_data["phone_number"] = phone_number2
 
-        with self.assertRaises(IntegrityError):
-            create_festival_registration(
-                phone_number=phone_number2, registration_data=duplicate_data
-            )
+        # Should not raise IntegrityError
+        registration2, user_created2 = create_festival_registration(
+            phone_number=phone_number2, registration_data=duplicate_data
+        )
+
+        self.assertIsNotNone(registration2.id)
+        self.assertEqual(registration1.national_id, registration2.national_id)
 
     def test_create_festival_registration_phone_mismatch(self):
         """Test registration creation when phone_number in data doesn't match service parameter"""

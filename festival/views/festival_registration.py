@@ -5,7 +5,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet
+from django_filters import CharFilter
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from festival.models import FestivalRegistration, Work
@@ -21,6 +22,25 @@ from festival.serializers import (
 )
 from province.models import Province, City
 from province.serializers import ProvinceSerializer, CitySerializer
+
+
+class FestivalRegistrationFilter(FilterSet):
+    """Custom filter for FestivalRegistration to support filtering by code"""
+
+    festival_format = CharFilter(field_name="festival_format__code")
+    festival_topic = CharFilter(field_name="festival_topic__code")
+    special_section = CharFilter(field_name="special_section__code")
+
+    class Meta:
+        model = FestivalRegistration
+        fields = [
+            "festival_format",
+            "festival_topic",
+            "special_section",
+            "gender",
+            "province",
+            "city",
+        ]
 
 
 class FestivalRegistrationCreateView(generics.CreateAPIView):
@@ -65,15 +85,8 @@ class FestivalRegistrationListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
 
-    # Filter fields
-    filterset_fields = [
-        "festival_format",
-        "festival_topic",
-        "province",
-        "city",
-        "gender",
-        "special_section",
-    ]
+    # Use custom filterset class
+    filterset_class = FestivalRegistrationFilter
 
     # Search fields
     search_fields = [
@@ -236,20 +249,15 @@ class MyFestivalRegistrationListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
 
-    # Filter fields
-    filterset_fields = [
-        "festival_format",
-        "festival_topic",
-        "gender",
-        "special_section",
-    ]
+    # Use custom filterset class
+    filterset_class = FestivalRegistrationFilter
 
     # Search fields
     search_fields = [
         "full_name",
         "media_name",
-        "festival_format",
-        "festival_topic",
+        "festival_format__name",
+        "festival_topic__name",
     ]
 
     # Ordering

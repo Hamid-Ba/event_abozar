@@ -166,6 +166,192 @@ class EducationModelTest(TestCase):
         self.assertEqual(Education._meta.verbose_name_plural, "آموزش‌ها")
         self.assertEqual(Education._meta.ordering, ["-publish_date"])
 
+    def test_education_video_field_optional(self):
+        """Test that video field is optional"""
+        from content.models import Education
+
+        education = Education.objects.create(**self.valid_education_data)
+        self.assertFalse(education.video)  # No video uploaded
+        self.assertFalse(education.has_video)  # has_video property should be False
+
+    def test_education_document_field_optional(self):
+        """Test that document field is optional"""
+        from content.models import Education
+
+        education = Education.objects.create(**self.valid_education_data)
+        self.assertFalse(education.document)  # No document uploaded
+        self.assertFalse(
+            education.has_document
+        )  # has_document property should be False
+
+    def test_education_has_video_property(self):
+        """Test has_video property"""
+        from content.models import Education
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        education = Education.objects.create(**self.valid_education_data)
+
+        # Initially should be False
+        self.assertFalse(education.has_video)
+
+        # Create a mock video file
+        mock_video = SimpleUploadedFile(
+            "test_video.mp4", b"fake video content", content_type="video/mp4"
+        )
+        education.video = mock_video
+        education.save()
+
+        # Refresh from database
+        education.refresh_from_db()
+
+        # Now should be True
+        self.assertTrue(education.has_video)
+
+    def test_education_has_document_property(self):
+        """Test has_document property"""
+        from content.models import Education
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        education = Education.objects.create(**self.valid_education_data)
+
+        # Initially should be False
+        self.assertFalse(education.has_document)
+
+        # Create a mock document file
+        mock_document = SimpleUploadedFile(
+            "test_document.pdf", b"fake pdf content", content_type="application/pdf"
+        )
+        education.document = mock_document
+        education.save()
+
+        # Refresh from database
+        education.refresh_from_db()
+
+        # Now should be True
+        self.assertTrue(education.has_document)
+
+    def test_education_video_filename_property(self):
+        """Test video_filename property"""
+        from content.models import Education
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        education = Education.objects.create(**self.valid_education_data)
+
+        # Should return None when no video
+        self.assertIsNone(education.video_filename)
+
+        # Add video
+        mock_video = SimpleUploadedFile(
+            "my_awesome_video.mp4", b"fake video content", content_type="video/mp4"
+        )
+        education.video = mock_video
+        education.save()
+        education.refresh_from_db()
+
+        # Should return a random filename with correct extension
+        self.assertIsNotNone(education.video_filename)
+        self.assertTrue(education.video_filename.endswith(".mp4"))
+        # Verify it's a UUID hex string (32 chars) + extension
+        filename_without_ext = education.video_filename.rsplit(".", 1)[0]
+        self.assertEqual(len(filename_without_ext), 32)  # UUID hex is 32 characters
+
+    def test_education_document_filename_property(self):
+        """Test document_filename property"""
+        from content.models import Education
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        education = Education.objects.create(**self.valid_education_data)
+
+        # Should return None when no document
+        self.assertIsNone(education.document_filename)
+
+        # Add document
+        mock_document = SimpleUploadedFile(
+            "my_presentation.pptx",
+            b"fake pptx content",
+            content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        )
+        education.document = mock_document
+        education.save()
+        education.refresh_from_db()
+
+        # Should return a random filename with correct extension
+        self.assertIsNotNone(education.document_filename)
+        self.assertTrue(education.document_filename.endswith(".pptx"))
+        # Verify it's a UUID hex string (32 chars) + extension
+        filename_without_ext = education.document_filename.rsplit(".", 1)[0]
+        self.assertEqual(len(filename_without_ext), 32)  # UUID hex is 32 characters
+
+    def test_education_with_both_video_and_document(self):
+        """Test education with both video and document files"""
+        from content.models import Education
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        education = Education.objects.create(**self.valid_education_data)
+
+        # Add both files
+        mock_video = SimpleUploadedFile(
+            "tutorial.mp4", b"fake video content", content_type="video/mp4"
+        )
+        mock_document = SimpleUploadedFile(
+            "slides.pdf", b"fake pdf content", content_type="application/pdf"
+        )
+
+        education.video = mock_video
+        education.document = mock_document
+        education.save()
+        education.refresh_from_db()
+
+        # Both should exist
+        self.assertTrue(education.has_video)
+        self.assertTrue(education.has_document)
+        self.assertIsNotNone(education.video_filename)
+        self.assertIsNotNone(education.document_filename)
+
+    def test_education_random_filenames_are_unique(self):
+        """Test that uploaded files get unique random filenames"""
+        from content.models import Education
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        # Create two education items with same filename
+        education1 = Education.objects.create(
+            title="آموزش اول",
+            description="توضیحات",
+            publish_date=self.valid_education_data["publish_date"],
+        )
+        education2 = Education.objects.create(
+            title="آموزش دوم",
+            description="توضیحات",
+            publish_date=self.valid_education_data["publish_date"],
+        )
+
+        # Upload files with the same original name
+        video1 = SimpleUploadedFile(
+            "same_name.mp4", b"content1", content_type="video/mp4"
+        )
+        video2 = SimpleUploadedFile(
+            "same_name.mp4", b"content2", content_type="video/mp4"
+        )
+
+        education1.video = video1
+        education2.video = video2
+        education1.save()
+        education2.save()
+
+        education1.refresh_from_db()
+        education2.refresh_from_db()
+
+        # Filenames should be different (random UUIDs)
+        self.assertNotEqual(education1.video_filename, education2.video_filename)
+
+        # Both should have .mp4 extension
+        self.assertTrue(education1.video_filename.endswith(".mp4"))
+        self.assertTrue(education2.video_filename.endswith(".mp4"))
+
+        # Both should be 32-char UUID + extension
+        self.assertEqual(len(education1.video_filename.rsplit(".", 1)[0]), 32)
+        self.assertEqual(len(education2.video_filename.rsplit(".", 1)[0]), 32)
+
 
 class EventModelTest(TestCase):
     """Test cases for Event model"""
