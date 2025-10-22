@@ -163,10 +163,11 @@ class WorkAdmin(admin.ModelAdmin):
 
     def display_festival_format(self, obj):
         """نمایش قالب جشنواره"""
-        format_display = dict(obj.festival_registration.FORMAT_CHOICES).get(
-            obj.festival_registration.festival_format,
-            obj.festival_registration.festival_format,
-        )
+        if not obj.festival_registration.festival_format:
+            return "-"
+
+        format_code = obj.festival_registration.festival_format.code
+        format_name = obj.festival_registration.festival_format.name
 
         # Color coding for different formats
         color_map = {
@@ -182,13 +183,13 @@ class WorkAdmin(admin.ModelAdmin):
             "podcast": "#17a2b8",  # Cyan
         }
 
-        color = color_map.get(obj.festival_registration.festival_format, "#6c757d")
+        color = color_map.get(format_code, "#6c757d")
 
         return format_html(
             '<span style="background-color: {}; color: white; padding: 2px 6px; '
             'border-radius: 3px; font-size: 11px; font-weight: bold;">{}</span>',
             color,
-            format_display,
+            format_name,
         )
 
     display_festival_format.short_description = "قالب جشنواره"

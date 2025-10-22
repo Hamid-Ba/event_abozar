@@ -59,33 +59,48 @@ def populate_festival_categories(apps, schema_editor):
         FestivalSpecialSection.objects.get_or_create(
             code=code, defaults={"name": name, "is_active": True}
         )
-    
+
     # Migrate existing data from old fields to new ForeignKey fields
     for registration in FestivalRegistration.objects.all():
         # Migrate festival_format
-        if hasattr(registration, 'festival_format_old') and registration.festival_format_old:
+        if (
+            hasattr(registration, "festival_format_old")
+            and registration.festival_format_old
+        ):
             try:
-                festival_format = FestivalFormat.objects.get(code=registration.festival_format_old)
+                festival_format = FestivalFormat.objects.get(
+                    code=registration.festival_format_old
+                )
                 registration.festival_format = festival_format
             except FestivalFormat.DoesNotExist:
                 pass  # Skip if code doesn't exist
-        
+
         # Migrate festival_topic
-        if hasattr(registration, 'festival_topic_old') and registration.festival_topic_old:
+        if (
+            hasattr(registration, "festival_topic_old")
+            and registration.festival_topic_old
+        ):
             try:
-                festival_topic = FestivalTopic.objects.get(code=registration.festival_topic_old)
+                festival_topic = FestivalTopic.objects.get(
+                    code=registration.festival_topic_old
+                )
                 registration.festival_topic = festival_topic
             except FestivalTopic.DoesNotExist:
                 pass
-        
+
         # Migrate special_section
-        if hasattr(registration, 'special_section_old') and registration.special_section_old:
+        if (
+            hasattr(registration, "special_section_old")
+            and registration.special_section_old
+        ):
             try:
-                special_section = FestivalSpecialSection.objects.get(code=registration.special_section_old)
+                special_section = FestivalSpecialSection.objects.get(
+                    code=registration.special_section_old
+                )
                 registration.special_section = special_section
             except FestivalSpecialSection.DoesNotExist:
                 pass
-        
+
         registration.save()
 
 
