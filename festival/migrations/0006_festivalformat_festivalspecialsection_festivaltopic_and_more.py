@@ -229,36 +229,57 @@ class Migration(migrations.Migration):
             name="national_id",
             field=models.CharField(max_length=10, verbose_name="کد ملی"),
         ),
-        migrations.AlterField(
-            model_name="festivalregistration",
-            name="festival_format",
+        # Step 1: Rename old fields to keep the data
+        migrations.RenameField(
+            model_name='festivalregistration',
+            old_name='festival_format',
+            new_name='festival_format_old',
+        ),
+        migrations.RenameField(
+            model_name='festivalregistration',
+            old_name='festival_topic',
+            new_name='festival_topic_old',
+        ),
+        migrations.RenameField(
+            model_name='festivalregistration',
+            old_name='special_section',
+            new_name='special_section_old',
+        ),
+        # Step 2: Add new ForeignKey fields (nullable for migration)
+        migrations.AddField(
+            model_name='festivalregistration',
+            name='festival_format',
             field=models.ForeignKey(
+                null=True,
+                blank=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="registrations",
-                to="festival.festivalformat",
-                verbose_name="قالب جشنواره",
+                related_name='registrations',
+                to='festival.festivalformat',
+                verbose_name='قالب جشنواره',
             ),
         ),
-        migrations.AlterField(
-            model_name="festivalregistration",
-            name="festival_topic",
+        migrations.AddField(
+            model_name='festivalregistration',
+            name='festival_topic',
             field=models.ForeignKey(
+                null=True,
+                blank=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="registrations",
-                to="festival.festivaltopic",
-                verbose_name="محور جشنواره",
+                related_name='registrations',
+                to='festival.festivaltopic',
+                verbose_name='محور جشنواره',
             ),
         ),
-        migrations.AlterField(
-            model_name="festivalregistration",
-            name="special_section",
+        migrations.AddField(
+            model_name='festivalregistration',
+            name='special_section',
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="registrations",
-                to="festival.festivalspecialsection",
-                verbose_name="بخش ویژه",
+                related_name='registrations',
+                to='festival.festivalspecialsection',
+                verbose_name='بخش ویژه',
             ),
         ),
     ]
