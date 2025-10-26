@@ -13,7 +13,13 @@ class NewsAdmin(BaseContentAdmin):
     """
 
     # Persian customizations for News
-    list_display = ["title", "publish_date", "tag_count", "created_at"]
+    list_display = [
+        "title",
+        "display_view_count",
+        "publish_date",
+        "tag_count",
+        "created_at",
+    ]
     list_filter = ["publish_date", "created_at", "tags"]
 
     def tag_count(self, obj):

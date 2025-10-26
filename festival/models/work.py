@@ -54,6 +54,13 @@ class Work(models.Model):
         verbose_name="فایل",
         help_text="فایل مربوط به اثر (حداکثر ۱۱۰ مگابایت)",
     )
+    publish_link = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="لینک انتشار",
+        help_text="لینک اثر منتشر شده (اختیاری)",
+    )
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")

@@ -16,6 +16,7 @@ class EducationAdmin(BaseContentAdmin):
     # Persian customizations for Education
     list_display = [
         "title",
+        "display_view_count",
         "publish_date",
         "display_media_status",
         "tag_count",
@@ -35,10 +36,11 @@ class EducationAdmin(BaseContentAdmin):
                 "description": "فایل‌های ویدیویی و اسنادی مرتبط با محتوای آموزشی",
             },
         ),
+        ("آمار", {"fields": ("view_count",), "classes": ("collapse",)}),
         ("تاریخچه", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
     )
 
-    readonly_fields = ["created_at", "updated_at"]
+    readonly_fields = ["created_at", "updated_at", "view_count"]
 
     def display_media_status(self, obj):
         """Display media files status"""

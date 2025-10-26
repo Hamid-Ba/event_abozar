@@ -22,10 +22,11 @@ class BaseContentSerializer(TaggitSerializer, serializers.ModelSerializer):
             "image",
             "publish_date",
             "tags",
+            "view_count",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "view_count", "created_at", "updated_at"]
 
 
 class NewsSerializer(BaseContentSerializer):
@@ -47,7 +48,7 @@ class NewsListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = News
-        fields = ["id", "title", "publish_date", "tags", "image"]
+        fields = ["id", "title", "publish_date", "tags", "image", "view_count"]
 
     def get_image(self, obj):
         request = self.context.get("request")
@@ -135,6 +136,7 @@ class EducationListSerializer(serializers.ModelSerializer):
             "publish_date",
             "tags",
             "image",
+            "view_count",
             "has_video",
             "has_document",
             "video_url",
@@ -187,7 +189,7 @@ class EventListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ["id", "title", "publish_date", "tags", "image"]
+        fields = ["id", "title", "publish_date", "tags", "image", "view_count"]
 
     def get_image(self, obj):
         request = self.context.get("request")

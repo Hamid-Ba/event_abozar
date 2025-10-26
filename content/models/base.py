@@ -24,6 +24,11 @@ class BaseContentModel(models.Model):
         verbose_name="تصویر",
         help_text="تصویر مرتبط با محتوا",
     )
+    view_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name="تعداد بازدید",
+        help_text="تعداد دفعاتی که این محتوا مشاهده شده است",
+    )
     publish_date = models.DateField(
         default=timezone.now,
         verbose_name="تاریخ انتشار",

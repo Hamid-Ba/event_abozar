@@ -65,6 +65,7 @@ class WorkAdmin(admin.ModelAdmin):
         "display_registration_name",
         "display_media_name",
         "display_festival_format",
+        "display_publish_link",
         "display_has_file",
         "display_created_date",
         "display_status",
@@ -100,6 +101,7 @@ class WorkAdmin(admin.ModelAdmin):
                     "title",
                     "description",
                     "file",
+                    "publish_link",
                     "display_file_info",
                 ],
                 "classes": ["wide"],
@@ -194,6 +196,22 @@ class WorkAdmin(admin.ModelAdmin):
 
     display_festival_format.short_description = "قالب جشنواره"
     display_festival_format.admin_order_field = "festival_registration__festival_format"
+
+    def display_publish_link(self, obj):
+        """نمایش لینک انتشار"""
+        if obj.publish_link:
+            return format_html(
+                '<a href="{}" target="_blank" style="color: #007bff; text-decoration: none;">'
+                '<span style="background-color: #e7f3ff; color: #0056b3; padding: 2px 8px; '
+                'border-radius: 3px; font-size: 11px;">🔗 مشاهده</span></a>',
+                obj.publish_link,
+            )
+        return format_html(
+            '<span style="color: #6c757d; font-size: 11px;">ندارد</span>'
+        )
+
+    display_publish_link.short_description = "لینک انتشار"
+    display_publish_link.admin_order_field = "publish_link"
 
     def display_has_file(self, obj):
         """نمایش وضعیت فایل"""

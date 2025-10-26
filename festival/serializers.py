@@ -305,6 +305,7 @@ class WorkListSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "file_url",
+            "publish_link",
             "registration_name",
             "media_name",
             "festival_format",
@@ -344,6 +345,7 @@ class WorkDetailSerializer(serializers.ModelSerializer):
             "file_size",
             "file_name",
             "unique_filename",
+            "publish_link",
             "festival_registration",
             "created_at",
             "updated_at",
@@ -398,6 +400,7 @@ class WorkCreateSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "file",
+            "publish_link",
         ]
 
     def validate_festival_registration(self, value):
