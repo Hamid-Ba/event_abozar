@@ -25,7 +25,11 @@ class ProvinceAPITest(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        # استان‌های واقعی با migration لود شده‌اند؛ سه استان این تست هم باید باشند
+        self.assertEqual(len(response.data), Province.objects.count())
+        self.assertGreaterEqual(len(response.data), 31)
+        names = {province["name"] for province in response.data}
+        self.assertTrue({"تهران", "اصفهان", "فارس"} <= names)
 
         # Check that provinces are ordered by name
         province_names = [province["name"] for province in response.data]
@@ -175,6 +179,10 @@ class ProvinceAndCityIntegrationTest(APITestCase):
         )
 
         self.other_province = Province.objects.create(name="اصفهان", slug="isfahan")
+
+        from festival.tests.utils import make_festival
+
+        self.festival = make_festival()
 
     def test_province_city_workflow(self):
         """Test complete workflow of getting provinces, then cities, then creating registration"""
