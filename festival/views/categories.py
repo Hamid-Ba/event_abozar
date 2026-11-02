@@ -7,7 +7,12 @@ from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
-from festival.models import FestivalFormat, FestivalTopic, FestivalSpecialSection
+from festival.models import (
+    Festival,
+    FestivalFormat,
+    FestivalTopic,
+    FestivalSpecialSection,
+)
 from festival.serializers import (
     FestivalFormatSerializer,
     FestivalTopicSerializer,
@@ -25,6 +30,13 @@ from festival.serializers import (
             type=OpenApiTypes.BOOL,
             location=OpenApiParameter.QUERY,
             description="فیلتر بر اساس وضعیت فعال/غیرفعال (پیش‌فرض: فقط فعال‌ها)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="festival",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="شناسه جشنواره؛ فقط مواردی که در آن جشنواره برگزار می‌شود",
             required=False,
         ),
     ],
@@ -48,6 +60,13 @@ class FestivalFormatListView(generics.ListAPIView):
         """
         queryset = FestivalFormat.objects.all()
 
+        # اگر جشنواره مشخص شده باشد، فقط موارد همان جشنواره
+        festival_id = self.request.query_params.get("festival")
+        if festival_id and festival_id.isdigit():
+            festival = Festival.objects.filter(pk=int(festival_id)).first()
+            if festival is not None:
+                queryset = queryset.filter(pk__in=festival.allowed_formats().values("pk"))
+
         # Filter by is_active (default: True)
         is_active = self.request.query_params.get("is_active", "true")
         if is_active.lower() in ["true", "1", "yes"]:
@@ -68,6 +87,13 @@ class FestivalFormatListView(generics.ListAPIView):
             type=OpenApiTypes.BOOL,
             location=OpenApiParameter.QUERY,
             description="فیلتر بر اساس وضعیت فعال/غیرفعال (پیش‌فرض: فقط فعال‌ها)",
+            required=False,
+        ),
+        OpenApiParameter(
+            name="festival",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="شناسه جشنواره؛ فقط مواردی که در آن جشنواره برگزار می‌شود",
             required=False,
         ),
     ],
@@ -91,6 +117,13 @@ class FestivalTopicListView(generics.ListAPIView):
         """
         queryset = FestivalTopic.objects.all()
 
+        # اگر جشنواره مشخص شده باشد، فقط موارد همان جشنواره
+        festival_id = self.request.query_params.get("festival")
+        if festival_id and festival_id.isdigit():
+            festival = Festival.objects.filter(pk=int(festival_id)).first()
+            if festival is not None:
+                queryset = queryset.filter(pk__in=festival.allowed_topics().values("pk"))
+
         # Filter by is_active (default: True)
         is_active = self.request.query_params.get("is_active", "true")
         if is_active.lower() in ["true", "1", "yes"]:
@@ -113,6 +146,13 @@ class FestivalTopicListView(generics.ListAPIView):
             description="فیلتر بر اساس وضعیت فعال/غیرفعال (پیش‌فرض: فقط فعال‌ها)",
             required=False,
         ),
+        OpenApiParameter(
+            name="festival",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            description="شناسه جشنواره؛ فقط مواردی که در آن جشنواره برگزار می‌شود",
+            required=False,
+        ),
     ],
 )
 class FestivalSpecialSectionListView(generics.ListAPIView):
@@ -133,6 +173,13 @@ class FestivalSpecialSectionListView(generics.ListAPIView):
         دریافت بخش‌های ویژه فعال مرتب شده بر اساس اولویت نمایش و نام
         """
         queryset = FestivalSpecialSection.objects.all()
+
+        # اگر جشنواره مشخص شده باشد، فقط موارد همان جشنواره
+        festival_id = self.request.query_params.get("festival")
+        if festival_id and festival_id.isdigit():
+            festival = Festival.objects.filter(pk=int(festival_id)).first()
+            if festival is not None:
+                queryset = queryset.filter(pk__in=festival.allowed_special_sections().values("pk"))
 
         # Filter by is_active (default: True)
         is_active = self.request.query_params.get("is_active", "true")

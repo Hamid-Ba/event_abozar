@@ -1,8 +1,10 @@
 """
 Work Views
 """
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_spectacular.utils import extend_schema
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,7 +16,32 @@ from festival.serializers import (
     WorkListSerializer,
     WorkDetailSerializer,
     WorkCreateSerializer,
+    WorkFileSerializer,
+    WorkFilesAddSerializer,
 )
+from festival.services import (
+    attach_files,
+    ensure_work_editable,
+    refresh_work_status_after_file_removal,
+)
+from festival.models import WorkFile
+
+
+def _work_queryset(user):
+    """آثار کاربر با همهٔ روابط لازم برای نمایش (بدون N+1)"""
+    return (
+        Work.objects.filter(festival_registration__user=user)
+        .select_related(
+            "festival_registration",
+            "festival_registration__festival",
+            "festival_registration__province",
+            "festival_registration__city",
+            "festival_format",
+            "festival_topic",
+            "special_section",
+        )
+        .prefetch_related("files")
+    )
 
 
 class WorkListCreateView(generics.ListCreateAPIView):
@@ -23,8 +50,11 @@ class WorkListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = [
-        "festival_registration__festival_format",
-        "festival_registration__festival_topic",
+        "festival_registration",
+        "festival_registration__festival",
+        "festival_format",
+        "festival_topic",
+        "status",
     ]
     search_fields = ["title", "description"]
     ordering_fields = ["created_at", "updated_at", "title"]
@@ -33,12 +63,7 @@ class WorkListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """Return only works belonging to the authenticated user"""
-        user = self.request.user
-        return Work.objects.filter(festival_registration__user=user).select_related(
-            "festival_registration",
-            "festival_registration__province",
-            "festival_registration__city",
-        )
+        return _work_queryset(self.request.user)
 
     def get_serializer_class(self):
         """Return appropriate serializer based on action"""
@@ -56,15 +81,28 @@ class WorkListCreateView(generics.ListCreateAPIView):
 
     @extend_schema(
         summary="ایجاد اثر جدید",
-        description="ثبت اثر جدید برای کاربر احراز هویت شده. کاربر تنها می‌تواند برای ثبت نام‌های خود اثر ایجاد کند.",
+        description=(
+            "ثبت اثر جدید برای ثبت‌نام کاربر. قالب/محور روی خود اثر است. "
+            "فایل‌ها با فیلد تکراری `files` (چند فایل) ارسال می‌شوند یا بعداً با `works/<id>/files/`. "
+            "اثر بدون فایل «پیش‌نویس» است."
+        ),
+        request=WorkCreateSerializer,
+        responses={201: WorkDetailSerializer},
         tags=["Works"],
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
-    def perform_create(self, serializer):
-        """Custom create logic"""
-        serializer.save()
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        work = serializer.save()
+        # پاسخ کامل (شامل id و فایل‌ها) تا فرانت بتواند فایل‌های بعدی را اضافه کند
+        work = _work_queryset(request.user).get(pk=work.pk)
+        return Response(
+            WorkDetailSerializer(work, context=self.get_serializer_context()).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class WorkDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -75,12 +113,7 @@ class WorkDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         """Return only works belonging to the authenticated user"""
-        user = self.request.user
-        return Work.objects.filter(festival_registration__user=user).select_related(
-            "festival_registration",
-            "festival_registration__province",
-            "festival_registration__city",
-        )
+        return _work_queryset(self.request.user)
 
     def get_serializer_class(self):
         """Return appropriate serializer based on action"""
@@ -95,6 +128,21 @@ class WorkDetailView(generics.RetrieveUpdateDestroyAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        instance = self.get_queryset().get(pk=instance.pk)
+        return Response(
+            WorkDetailSerializer(instance, context=self.get_serializer_context()).data
+        )
+
+    def perform_destroy(self, instance):
+        ensure_work_editable(instance)
+        instance.delete()
 
     @extend_schema(
         summary="به‌روزرسانی اثر",
@@ -135,7 +183,7 @@ class UserFestivalRegistrationsView(generics.ListAPIView):
         """Return only festival registrations belonging to the authenticated user"""
         user = self.request.user
         return FestivalRegistration.objects.filter(user=user).select_related(
-            "province", "city"
+            "province", "city", "festival"
         )
 
     @extend_schema(
@@ -160,13 +208,7 @@ class WorkByFestivalView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         festival_id = self.kwargs.get("festival_id")
-        return Work.objects.filter(
-            festival_registration__user=user, festival_registration_id=festival_id
-        ).select_related(
-            "festival_registration",
-            "festival_registration__province",
-            "festival_registration__city",
-        )
+        return _work_queryset(user).filter(festival_registration_id=festival_id)
 
     @extend_schema(
         summary="فهرست آثار بر اساس ثبت‌نام جشنواره",
@@ -175,3 +217,47 @@ class WorkByFestivalView(generics.ListAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+class WorkFilesView(APIView):
+    """افزودن فایل به اثر (مرحلهٔ دوم آپلود)"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    @extend_schema(
+        summary="افزودن فایل به اثر",
+        description=(
+            "یک یا چند فایل (`files`) یا یک فایل (`file`). نوع و حجم هر فایل بررسی می‌شود و "
+            "در صورت خطا پیام فارسی با نام فایل و حجم/سقف مجاز برمی‌گردد."
+        ),
+        request=WorkFilesAddSerializer,
+        responses={201: WorkFileSerializer(many=True)},
+        tags=["Works"],
+    )
+    def post(self, request, pk):
+        work = get_object_or_404(_work_queryset(request.user), pk=pk)
+        serializer = WorkFilesAddSerializer(
+            data=request.data, context={"request": request, "work": work}
+        )
+        serializer.is_valid(raise_exception=True)
+        created = attach_files(work, serializer.validated_data["uploaded_files"])
+        return Response(
+            WorkFileSerializer(created, many=True, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class WorkFileDetailView(APIView):
+    """حذف یک فایل از اثر"""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(summary="حذف فایل اثر", tags=["Works"])
+    def delete(self, request, pk, file_id):
+        work = get_object_or_404(_work_queryset(request.user), pk=pk)
+        ensure_work_editable(work)
+        work_file = get_object_or_404(WorkFile, pk=file_id, work=work)
+        work_file.delete()
+        refresh_work_status_after_file_removal(work)
+        return Response(status=status.HTTP_204_NO_CONTENT)

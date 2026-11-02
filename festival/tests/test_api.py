@@ -15,6 +15,7 @@ from festival.models import (
     FestivalSpecialSection,
 )
 from province.models import Province, City
+from festival.tests.utils import make_festival
 
 User = get_user_model()
 
@@ -37,6 +38,9 @@ class FestivalRegistrationAPITest(APITestCase):
 
         # Create test user
         self.user = User.objects.create(phone="09123456789", fullName="علی احمدی")
+
+        # ثبت‌نام بدون ذکر جشنواره فقط وقتی مجاز است که دقیقاً یک جشنواره باز باشد
+        self.festival = make_festival()
 
         # Load category objects
         self.format_news = FestivalFormat.objects.get(code="news_report")
@@ -171,8 +175,6 @@ class FestivalRegistrationAPITest(APITestCase):
             "province_id",
             "city_id",
             "media_name",
-            "festival_format",
-            "festival_topic",
         ]
 
         for field in required_fields:
@@ -864,7 +866,7 @@ class WorkAPITest(APITestCase):
     #     self.assertIn("توضیحات اثر باید حداقل ۱۰ کاراکتر باشد", str(response.data))
 
     def test_work_create_missing_file(self):
-        """Test work creation without file should fail"""
+        """اثر بدون فایل به‌صورت پیش‌نویس ساخته می‌شود (فایل‌ها بعداً اضافه می‌شوند)"""
         self.client.force_authenticate(user=self.user1)
         url = reverse("festival:work-list")
 
@@ -876,17 +878,12 @@ class WorkAPITest(APITestCase):
         }
 
         response = self.client.post(url, invalid_data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue("file" in response.data)
-        # Either the DRF error message or our custom message should appear
-        response_str = str(response.data)
-        self.assertTrue(
-            "فایل اثر الزامی است" in response_str
-            or "فایلی ارسال نشده است" in response_str
-        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["status"], "draft")
+        self.assertEqual(response.data["files"], [])
 
     def test_work_create_file_too_large(self):
-        """Test serializer validation for file larger than 110MB"""
+        """Test serializer validation for file larger than the per-kind limit"""
         from django.core.files.uploadedfile import SimpleUploadedFile
         from festival.serializers import WorkCreateSerializer
         from unittest.mock import Mock
@@ -910,7 +907,7 @@ class WorkAPITest(APITestCase):
             data=serializer_data, context={"request": request}
         )
         self.assertFalse(serializer.is_valid())
-        self.assertIn("حجم فایل نباید بیش از ۱۱۰ مگابایت باشد", str(serializer.errors))
+        self.assertIn("حداکثر حجم مجاز برای سند 100 مگابایت", str(serializer.errors))
 
     def test_work_list_user_works_only(self):
         """Test that users only see their own works"""

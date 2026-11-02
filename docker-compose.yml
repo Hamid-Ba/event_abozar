@@ -30,7 +30,7 @@ services:
     command: >
       sh -c "python manage.py migrate --no-input &&
        python manage.py collectstatic --no-input &&
-       gunicorn --bind 0.0.0.0:8080 --forwarded-allow-ips='*' --access-logfile - --workers 3 --timeout 120 config.wsgi:application"
+       gunicorn --bind 0.0.0.0:8080 --forwarded-allow-ips='*' --access-logfile - --workers 3 --threads 4 --timeout 600 config.wsgi:application"
     volumes:
       - /home/event_abozar_back/static:/home/app/event_abozar/static/
       - /home/event_abozar_back/media:/home/app/event_abozar/media/

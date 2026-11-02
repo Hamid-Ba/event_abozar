@@ -104,8 +104,6 @@ class FestivalRegistrationModelTest(TestCase):
             "province",
             "city",
             "media_name",
-            "festival_format",
-            "festival_topic",
         ]
 
         for field in required_fields:

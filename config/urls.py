@@ -17,6 +17,7 @@ urlpatterns = [
     path("api/", include("common.urls")),
     path("account/", include("account.urls")),
     path("festival/", include("festival.urls")),
+    path("forms/", include("formbuilder.urls")),
     path("content/", include("content.urls")),
     path("info/", include("info.urls")),
 ]

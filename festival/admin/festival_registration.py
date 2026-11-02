@@ -13,6 +13,7 @@ from django.contrib.admin import SimpleListFilter
 
 from festival.models import FestivalRegistration, FestivalFormat, FestivalTopic
 from province.models import City
+from festival.admin.exports import csv_response
 
 
 class FestivalFormatFilter(SimpleListFilter):
@@ -76,6 +77,7 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
     """
 
     list_display = [
+        "festival",
         "display_full_name",
         "display_media_name",
         "display_festival_format",
@@ -88,6 +90,7 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
     ]
 
     list_filter = [
+        "festival",
         FestivalFormatFilter,
         FestivalTopicFilter,
         GenderFilter,
@@ -143,8 +146,13 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
         (
             "🏆 تنظیمات جشنواره",
             {
-                "fields": ("festival_format", "festival_topic", "special_section"),
-                "description": "قالب، محور و بخش ویژه جشنواره",
+                "fields": (
+                    "festival",
+                    "festival_format",
+                    "festival_topic",
+                    "special_section",
+                ),
+                "description": "جشنواره. قالب/محور/بخش ویژه اکنون روی هر اثر ثبت می‌شود (این‌جا فقط برای ثبت‌نام‌های قدیمی)",
             },
         ),
         (
@@ -304,6 +312,7 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
         """بهینه‌سازی کوئری با select_related"""
         queryset = super().get_queryset(request)
         return queryset.select_related(
+            "festival",
             "user",
             "province",
             "city",
@@ -316,7 +325,50 @@ class FestivalRegistrationAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
 
     # Actions
-    actions = ["mark_as_special"]
+    actions = ["mark_as_special", "export_csv"]
+
+    def export_csv(self, request, queryset):
+        """خروجی CSV (UTF-8 با BOM برای اکسل) از ثبت‌نام‌های انتخابی"""
+        rows = []
+        for r in queryset.select_related("festival", "province", "city"):
+            rows.append(
+                [
+                    r.festival.title if r.festival else "",
+                    r.full_name,
+                    r.father_name,
+                    r.national_id,
+                    r.get_gender_display(),
+                    r.education,
+                    r.phone_number,
+                    r.virtual_number or "",
+                    r.province.name,
+                    r.city.name,
+                    r.media_name,
+                    r.works.count(),
+                    r.created_at.strftime("%Y-%m-%d %H:%M"),
+                ]
+            )
+        return csv_response(
+            "registrations.csv",
+            [
+                "جشنواره",
+                "نام و نام خانوادگی",
+                "نام پدر",
+                "کد ملی",
+                "جنسیت",
+                "تحصیلات",
+                "شماره تماس",
+                "شماره مجازی",
+                "استان",
+                "شهر",
+                "نام رسانه",
+                "تعداد آثار",
+                "تاریخ ثبت",
+            ],
+            rows,
+        )
+
+    export_csv.short_description = "خروجی CSV از موارد انتخابی"
 
     # def export_to_excel(self, request, queryset):
     #     """خروجی اکسل"""

@@ -2,6 +2,8 @@
 Festival Admin Configuration
 تنظیمات مدیریت جشنواره رسانه ای ابوذر
 """
+from .festival import FestivalAdmin
+from .judging import JudgeProfileAdmin, ReviewAdmin
 from .festival_registration import FestivalRegistrationAdmin
 from .work import WorkAdmin
 from .categories import (
@@ -11,6 +13,9 @@ from .categories import (
 )
 
 __all__ = [
+    "JudgeProfileAdmin",
+    "ReviewAdmin",
+    "FestivalAdmin",
     "FestivalRegistrationAdmin",
     "WorkAdmin",
     "FestivalFormatAdmin",

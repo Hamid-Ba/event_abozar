@@ -9,7 +9,9 @@ from django.utils import timezone
 from django.db.models import Count
 from django.contrib.admin import SimpleListFilter
 
-from festival.models import Work
+from festival.models import Work, WorkFile
+from festival.admin.exports import csv_response
+from festival.admin.judging import ReviewInline
 
 
 class WorkRegistrationFilter(SimpleListFilter):
@@ -56,15 +58,29 @@ class MediaNameFilter(SimpleListFilter):
         return queryset
 
 
+class WorkFileInline(admin.TabularInline):
+    """فایل‌های اثر"""
+
+    model = WorkFile
+    extra = 0
+    fields = ("file", "original_name", "kind", "size")
+    readonly_fields = ("original_name", "kind", "size")
+
+
 @admin.register(Work)
 class WorkAdmin(admin.ModelAdmin):
     """مدیریت آثار جشنواره"""
+
+    inlines = [WorkFileInline, ReviewInline]
+    actions = ["export_csv"]
 
     list_display = [
         "display_title",
         "display_registration_name",
         "display_media_name",
         "display_festival_format",
+        "final_score",
+        "reviews_count",
         "display_publish_link",
         "display_has_file",
         "display_created_date",
@@ -74,8 +90,10 @@ class WorkAdmin(admin.ModelAdmin):
     list_filter = [
         WorkRegistrationFilter,
         MediaNameFilter,
-        "festival_registration__festival_format",
-        "festival_registration__festival_topic",
+        "festival_registration__festival",
+        "festival_format",
+        "festival_topic",
+        "status",
         "created_at",
     ]
 
@@ -90,6 +108,8 @@ class WorkAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "display_file_info",
+        "final_score",
+        "reviews_count",
     ]
 
     fieldsets = [
@@ -98,6 +118,12 @@ class WorkAdmin(admin.ModelAdmin):
             {
                 "fields": [
                     "festival_registration",
+                    "festival_format",
+                    "festival_topic",
+                    "special_section",
+                    "status",
+                    "final_score",
+                    "reviews_count",
                     "title",
                     "description",
                     "file",
@@ -126,9 +152,13 @@ class WorkAdmin(admin.ModelAdmin):
             .get_queryset(request)
             .select_related(
                 "festival_registration",
+                "festival_registration__festival",
                 "festival_registration__province",
                 "festival_registration__city",
+                "festival_format",
+                "festival_topic",
             )
+            .prefetch_related("files")
         )
 
     def display_title(self, obj):
@@ -165,11 +195,11 @@ class WorkAdmin(admin.ModelAdmin):
 
     def display_festival_format(self, obj):
         """نمایش قالب جشنواره"""
-        if not obj.festival_registration.festival_format:
+        if not obj.festival_format:
             return "-"
 
-        format_code = obj.festival_registration.festival_format.code
-        format_name = obj.festival_registration.festival_format.name
+        format_code = obj.festival_format.code
+        format_name = obj.festival_format.name
 
         # Color coding for different formats
         color_map = {
@@ -195,7 +225,7 @@ class WorkAdmin(admin.ModelAdmin):
         )
 
     display_festival_format.short_description = "قالب جشنواره"
-    display_festival_format.admin_order_field = "festival_registration__festival_format"
+    display_festival_format.admin_order_field = "festival_format"
 
     def display_publish_link(self, obj):
         """نمایش لینک انتشار"""
@@ -215,16 +245,16 @@ class WorkAdmin(admin.ModelAdmin):
 
     def display_has_file(self, obj):
         """نمایش وضعیت فایل"""
-        if obj.file:
+        if obj.files.all() or obj.file:
             return format_html(
-                '<span style="color: #28a745; font-weight: bold;">✓ موجود</span>'
+                '<span style="color: #28a745; font-weight: bold;">✓ {} فایل</span>',
+                len(obj.files.all()) or 1,
             )
         return format_html(
             '<span style="color: #dc3545; font-weight: bold;">✗ خطا</span>'
         )
 
     display_has_file.short_description = "فایل"
-    display_has_file.admin_order_field = "file"
 
     def display_created_date(self, obj):
         """نمایش تاریخ ایجاد"""
@@ -248,7 +278,7 @@ class WorkAdmin(admin.ModelAdmin):
 
     def display_status(self, obj):
         """نمایش وضعیت کلی اثر"""
-        has_file = bool(obj.file)
+        has_file = bool(obj.files.all() or obj.file)
         has_description = bool(obj.description and len(obj.description.strip()) > 1)
 
         if has_file and has_description:
@@ -319,7 +349,7 @@ class WorkAdmin(admin.ModelAdmin):
 
         # آمار کلی
         total_works = Work.objects.count()
-        works_with_files = Work.objects.exclude(file="").count()
+        works_with_files = Work.objects.filter(files__isnull=False).distinct().count()
         recent_works = Work.objects.filter(
             created_at__gte=timezone.now() - timezone.timedelta(days=7)
         ).count()
@@ -333,3 +363,51 @@ class WorkAdmin(admin.ModelAdmin):
         )
 
         return super().changelist_view(request, extra_context)
+
+    def export_csv(self, request, queryset):
+        """خروجی CSV (UTF-8 با BOM برای اکسل) از آثار انتخابی"""
+        rows = []
+        for w in queryset:
+            reg = w.festival_registration
+            rows.append(
+                [
+                    reg.festival.title if reg.festival else "",
+                    reg.full_name,
+                    reg.phone_number,
+                    reg.media_name,
+                    w.title,
+                    w.festival_format.name if w.festival_format else "",
+                    w.festival_topic.name if w.festival_topic else "",
+                    w.special_section.name if w.special_section else "",
+                    w.get_status_display(),
+                    w.final_score if w.final_score is not None else "",
+                    w.reviews_count,
+                    w.publish_link or "",
+                    len(w.files.all()),
+                    " | ".join(request.build_absolute_uri(f.file.url) for f in w.files.all()),
+                    w.created_at.strftime("%Y-%m-%d %H:%M"),
+                ]
+            )
+        return csv_response(
+            "works.csv",
+            [
+                "جشنواره",
+                "ثبت‌نام‌کننده",
+                "شماره تماس",
+                "رسانه",
+                "عنوان اثر",
+                "قالب",
+                "محور",
+                "بخش ویژه",
+                "وضعیت",
+                "امتیاز نهایی",
+                "تعداد داور",
+                "لینک انتشار",
+                "تعداد فایل",
+                "لینک فایل‌ها",
+                "تاریخ ثبت",
+            ],
+            rows,
+        )
+
+    export_csv.short_description = "خروجی CSV از موارد انتخابی"

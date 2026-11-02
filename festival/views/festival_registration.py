@@ -1,6 +1,7 @@
 """
 Festival Registration Views
 """
+from django.db.models import Count
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,6 +18,7 @@ from festival.serializers import (
     FestivalRegistrationListSerializer,
     MyFestivalRegistrationListSerializer,
     MyFestivalRegistrationDetailSerializer,
+    MyRegistrationUpdateSerializer,
     StatisticsSerializer,
     MyStatisticsSerializer,
 )
@@ -34,6 +36,7 @@ class FestivalRegistrationFilter(FilterSet):
     class Meta:
         model = FestivalRegistration
         fields = [
+            "festival",
             "festival_format",
             "festival_topic",
             "special_section",
@@ -79,7 +82,7 @@ class FestivalRegistrationListView(generics.ListAPIView):
     """List Festival Registrations - No Authentication Required"""
 
     queryset = FestivalRegistration.objects.select_related(
-        "user", "province", "city"
+        "user", "province", "city", "festival"
     ).all()
     serializer_class = FestivalRegistrationListSerializer
     permission_classes = [permissions.AllowAny]
@@ -114,7 +117,7 @@ class FestivalRegistrationDetailView(generics.RetrieveAPIView):
     """Get Festival Registration Detail - No Authentication Required"""
 
     queryset = FestivalRegistration.objects.select_related(
-        "user", "province", "city"
+        "user", "province", "city", "festival"
     ).all()
     serializer_class = FestivalRegistrationSerializer
     permission_classes = [permissions.AllowAny]
@@ -140,16 +143,16 @@ class FestivalRegistrationSearchView(generics.ListAPIView):
         national_id = self.request.query_params.get("national_id", None)
 
         queryset = FestivalRegistration.objects.select_related(
-            "user", "province", "city"
+            "user", "province", "city", "festival"
         ).none()
 
         if phone:
             queryset = FestivalRegistration.objects.select_related(
-                "user", "province", "city"
+                "user", "province", "city", "festival"
             ).filter(phone_number=phone)
         elif national_id:
             queryset = FestivalRegistration.objects.select_related(
-                "user", "province", "city"
+                "user", "province", "city", "festival"
             ).filter(national_id=national_id)
 
         return queryset
@@ -266,8 +269,12 @@ class MyFestivalRegistrationListView(generics.ListAPIView):
 
     def get_queryset(self):
         """Return only the authenticated user's festival registrations"""
-        return FestivalRegistration.objects.select_related("province", "city").filter(
-            user=self.request.user
+        return (
+            FestivalRegistration.objects.select_related(
+                "province", "city", "festival", "festival_format", "festival_topic"
+            )
+            .filter(user=self.request.user)
+            .annotate(works_count=Count("works"))
         )
 
     @extend_schema(
@@ -279,18 +286,23 @@ class MyFestivalRegistrationListView(generics.ListAPIView):
         return super().get(request, *args, **kwargs)
 
 
-class MyFestivalRegistrationDetailView(generics.RetrieveAPIView):
-    """Get authenticated user's festival registration detail"""
+class MyFestivalRegistrationDetailView(generics.RetrieveUpdateAPIView):
+    """Get / update authenticated user's festival registration"""
 
-    serializer_class = MyFestivalRegistrationDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "id"
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return MyRegistrationUpdateSerializer
+        return MyFestivalRegistrationDetailSerializer
 
     def get_queryset(self):
         """Return only the authenticated user's festival registrations"""
-        return FestivalRegistration.objects.select_related("province", "city").filter(
-            user=self.request.user
-        )
+        return FestivalRegistration.objects.select_related(
+            "province", "city", "festival", "festival_format", "festival_topic"
+        ).filter(user=self.request.user)
 
     @extend_schema(
         summary="جزئیات ثبت‌نام من",
@@ -299,6 +311,24 @@ class MyFestivalRegistrationDetailView(generics.RetrieveAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="ویرایش اطلاعات ثبت‌نام من",
+        description="ویرایش اطلاعات شخصی ثبت‌نام (کد ملی و شماره تماس اصلی قابل تغییر نیست). فقط تا پایان مهلت ثبت‌نام جشنواره.",
+        request=MyRegistrationUpdateSerializer,
+        responses={200: MyFestivalRegistrationDetailSerializer},
+        tags=["My Festival Registration"],
+    )
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(
+            MyFestivalRegistrationDetailSerializer(
+                instance, context=self.get_serializer_context()
+            ).data
+        )
 
 
 class StatisticsView(APIView):

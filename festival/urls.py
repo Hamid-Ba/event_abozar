@@ -20,11 +20,67 @@ from festival.views import (
     FestivalFormatListView,
     FestivalTopicListView,
     FestivalSpecialSectionListView,
+    FestivalListView,
+    FeaturedFestivalListView,
+    FestivalDetailView,
+    FestivalRegisterView,
+    FestivalMyWorksView,
+    MyFestivalsView,
+    UploadRulesView,
+    WorkFilesView,
+    WorkFileDetailView,
+    JudgeWorkListView,
+    JudgeWorkDetailView,
+    JudgeReviewCreateView,
+    JudgeMyReviewsView,
+    AdminJudgedWorksView,
+    NotificationListView,
+    NotificationUnreadCountView,
+    NotificationReadView,
 )
 
 app_name = "festival"
 
 urlpatterns = [
+    # Notifications (اعلان‌ها)
+    path("notifications/", NotificationListView.as_view(), name="notifications"),
+    path(
+        "notifications/unread-count/",
+        NotificationUnreadCountView.as_view(),
+        name="notifications-unread-count",
+    ),
+    path("notifications/read-all/", NotificationReadView.as_view(), name="notifications-read-all"),
+    path("notifications/<int:pk>/read/", NotificationReadView.as_view(), name="notification-read"),
+    # Judging (داوری)
+    path("judge/works/", JudgeWorkListView.as_view(), name="judge-works"),
+    path("judge/works/<int:pk>/", JudgeWorkDetailView.as_view(), name="judge-work-detail"),
+    path(
+        "judge/works/<int:pk>/review/",
+        JudgeReviewCreateView.as_view(),
+        name="judge-review-create",
+    ),
+    path("judge/my-reviews/", JudgeMyReviewsView.as_view(), name="judge-my-reviews"),
+    path("admin/judged-works/", AdminJudgedWorksView.as_view(), name="admin-judged-works"),
+    # Festivals (چند جشنواره هم‌زمان)
+    path("festivals/", FestivalListView.as_view(), name="festival-list"),
+    path(
+        "festivals/featured/",
+        FeaturedFestivalListView.as_view(),
+        name="festival-featured",
+    ),
+    path("festivals/<int:id>/", FestivalDetailView.as_view(), name="festival-detail"),
+    path(
+        "festivals/<int:id>/register/",
+        FestivalRegisterView.as_view(),
+        name="festival-register",
+    ),
+    path(
+        "festivals/<int:id>/my-works/",
+        FestivalMyWorksView.as_view(),
+        name="festival-my-works",
+    ),
+    path("my-festivals/", MyFestivalsView.as_view(), name="my-festivals"),
+    path("upload-rules/", UploadRulesView.as_view(), name="upload-rules"),
     # Festival Registration endpoints
     path(
         "registration/",
@@ -60,6 +116,12 @@ urlpatterns = [
     # Work endpoints
     path("works/", WorkListCreateView.as_view(), name="work-list"),
     path("works/<int:pk>/", WorkDetailView.as_view(), name="work-detail"),
+    path("works/<int:pk>/files/", WorkFilesView.as_view(), name="work-files"),
+    path(
+        "works/<int:pk>/files/<int:file_id>/",
+        WorkFileDetailView.as_view(),
+        name="work-file-detail",
+    ),
     path(
         "works/by-festival/<int:festival_id>/",
         WorkByFestivalView.as_view(),

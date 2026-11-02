@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from province.models import Province, City
 from .categories import FestivalFormat, FestivalTopic, FestivalSpecialSection
+from .festival import Festival
 
 User = get_user_model()
 
@@ -21,6 +22,16 @@ class FestivalRegistration(models.Model):
     # User relationship
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="festival_registrations"
+    )
+
+    # جشنواره (برای ثبت‌نام‌های قدیمی خالی است؛ ثبت‌نام جدید همیشه جشنواره دارد)
+    festival = models.ForeignKey(
+        Festival,
+        on_delete=models.CASCADE,
+        related_name="registrations",
+        null=True,
+        blank=True,
+        verbose_name="جشنواره",
     )
 
     # Personal Information
@@ -50,13 +61,19 @@ class FestivalRegistration(models.Model):
         FestivalFormat,
         on_delete=models.CASCADE,
         related_name="registrations",
+        null=True,
+        blank=True,
         verbose_name="قالب جشنواره",
+        help_text="منسوخ: قالب اکنون روی هر اثر ثبت می‌شود",
     )
     festival_topic = models.ForeignKey(
         FestivalTopic,
         on_delete=models.CASCADE,
         related_name="registrations",
+        null=True,
+        blank=True,
         verbose_name="محور جشنواره",
+        help_text="منسوخ: محور اکنون روی هر اثر ثبت می‌شود",
     )
     special_section = models.ForeignKey(
         FestivalSpecialSection,
@@ -75,6 +92,13 @@ class FestivalRegistration(models.Model):
         verbose_name = "ثبت نام جشنواره"
         verbose_name_plural = "ثبت نام های جشنواره"
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "festival"],
+                condition=models.Q(festival__isnull=False),
+                name="unique_registration_per_user_festival",
+            )
+        ]
 
     def __str__(self):
         return f"{self.full_name} - {self.media_name}"

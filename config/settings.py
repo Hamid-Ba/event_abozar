@@ -46,6 +46,7 @@ EVENT_ABOZAR_APPS = [
     "common",
     "monitoring",
     "festival",
+    "formbuilder",
     "siteinfo",
     "province",
     "content",
@@ -192,7 +193,18 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
+    "EXCEPTION_HANDLER": "common.exceptions.api_exception_handler",
 }
+
+# آپلود آثار جشنواره (سقف حجم هر فایل به مگابایت برای هر نوع، و حداکثر تعداد فایل هر اثر)
+FESTIVAL_UPLOAD_LIMITS_MB = {
+    "video": 100,
+    "audio": 100,
+    "image": 30,
+    "document": 100,
+    "archive": 100,
+}
+FESTIVAL_MAX_FILES_PER_WORK = 5
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "API یازدهمین جشنواره رسانه‌ای ابوذر",
