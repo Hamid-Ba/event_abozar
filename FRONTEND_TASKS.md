@@ -30,7 +30,7 @@
 - `POST festivals/<id>/register/` (کاربر باید وارد شده باشد؛ اگر نه، به ورود هدایت شود و بعد برگردد).
 - فیلدها: `full_name`, `father_name`, `national_id`, `gender`, `education`, `phone_number`, `virtual_number`, `province_id`, `city_id`, `media_name`. (فیلدهای دقیق و اجباری‌ها را از Swagger بخوانید.)
 - **قالب و موضوع در این فرم نباشد.**
-- استان: `GET provinces/`؛ شهر: `GET cities/?province=<id>` (پارامتر را از Swagger تأیید کنید). هر دو انتخابی (select/combobox قابل جستجو)، نه تایپ دستی. ۳۱ استان و حدود ۱۱۰۰ شهر در بک‌اند هست.
+- استان: `GET provinces/`؛ شهر: `GET cities/?province_id=<id>` (بدون این پارامتر همهٔ شهرها برمی‌گردند). هر دو انتخابی (select/combobox قابل جستجو)، نه تایپ دستی. ۳۱ استان و حدود ۱۱۰۰ شهر در بک‌اند هست.
 - پاسخ **۴۰۹**: کاربر قبلاً ثبت‌نام کرده و `registration_id` برمی‌گردد. خطا نشان ندهید؛ کاربر را مستقیم به صفحهٔ ارسال اثر همان ثبت‌نام ببرید.
 - ویرایش اطلاعات: `PATCH my-registrations-detail/<id>/` (کد ملی و شمارهٔ اصلی قفل است و فقط تا پایان مهلت قابل ویرایش است).
 
